@@ -26,21 +26,16 @@ module dequantize_elem #(
     localparam integer MANT_W          = FP_MANT_W + 1; // 1.m (24 for FP32)
     localparam integer QMAX            = (1 << (BIT_NUM-1)) - 1; // e.g. 127
     localparam integer QSQ             = QMAX * QMAX;            // e.g. 16129
-    localparam integer LOG2_QSQ_CEIL   = clog2(QSQ);             // ceil(log2(Q^2)) e.g. 14
+    localparam integer LOG2_QSQ_CEIL   = clog2(QSQ);             // 14 for 127*127
 
     // normalized exponent range (unbiased)
     localparam integer EXP_RAW_MIN_NORM = 1;
     localparam integer EXP_RAW_MAX_NORM = (1 << FP_EXP_W) - 2;
-    localparam integer UNB_MIN          = EXP_RAW_MIN_NORM - FP_EXP_BIAS; // -126 for FP32
-    localparam integer UNB_MAX          = EXP_RAW_MAX_NORM - FP_EXP_BIAS; // +127 for FP32
+    localparam integer UNB_MIN          = EXP_RAW_MIN_NORM - FP_EXP_BIAS; // -126
+    localparam integer UNB_MAX          = EXP_RAW_MAX_NORM - FP_EXP_BIAS; // +127
 
-    // exponent scratch width (for intermediate sums)
-    localparam integer EW = FP_EXP_W + 6;  // margin bits
-
-    // fixed-point mantissa adjustment to cancel /Q^2 -> /2^k bias
-    // MANT_ADJ ~= round( (2^LOG2_QSQ_CEIL * 2^FIXP_K) / QSQ )
-    localparam integer FIXP_K   = 16; // precision (12~20 OK)
-    localparam integer MANT_ADJ = ((1 << (LOG2_QSQ_CEIL + FIXP_K)) + (QSQ >> 1)) / QSQ;
+    // exponent scratch width
+    localparam integer EW = FP_EXP_W + 6;
 
     // ---------- sign / |acc| ----------
     wire sign_acc;
@@ -58,7 +53,7 @@ module dequantize_elem #(
     // ---------- S split ----------
     wire [MANT_W-1:0] A_mant; // integer (1.m) scaled by 2^FP_MANT_W
     wire A_is_zero;
-    integer A_exp_unb;   // <<<<< 모듈 상단 선언
+    integer A_exp_unb;
 
     assign A_mant   = {1'b1, mantissa_scale};
     assign A_is_zero= (exp_scale == {FP_EXP_W{1'b0}}) && (mantissa_scale == {FP_MANT_W{1'b0}});
@@ -68,16 +63,14 @@ module dequantize_elem #(
 
     // ---------- integer product P = |acc| * (1.m) ----------
     localparam integer PW = FP_DATA_W + MANT_W; // product width
-    wire [PW-1:0] P;
-    assign P = acc_abs * A_mant; // unsigned multiply
+    wire [PW-1:0] P = acc_abs * A_mant; // unsigned multiply
 
-    wire is_zero_path;
-    assign is_zero_path = acc_is_zero | A_is_zero | (P == {PW{1'b0}});
+    wire is_zero_path = acc_is_zero | A_is_zero | (P == {PW{1'b0}});
 
     // ---------- find MSB index of P (floor(log2 P)) ----------
-    reg [31:0] msb_idx;  // <<<<< 모듈 상단 선언
-    integer k;           // <<<<< 모듈 상단 선언 (for 루프 변수)
-    reg found;           // <<<<< 모듈 상단 선언 (브레이크 대용)
+    reg [31:0] msb_idx;
+    integer k;
+    reg found;
 
     always @* begin
         msb_idx = 0;
@@ -90,17 +83,17 @@ module dequantize_elem #(
         end
     end
 
-    // ---------- normalize to 24-bit (1.h) with rounding ----------
-    reg  [31:0] sr, sl;                 // <<<<< 모듈 상단 선언
-    wire        shift_right;
+    // ---------- normalize to 24-bit (1.h) with robust rounding ----------
+    reg  [31:0] sr, sl;
+    wire        shift_right = (msb_idx >= (MANT_W-1));
     wire [PW-1:0] P_shifted_r;
-    reg  round_bit;                     // <<<<< 모듈 상단 선언
-    wire [MANT_W:0]   mant_with_carry_r;
+    wire        guard, sticky, round_up;
+    wire [PW-1:0] lower_mask;
+    wire [MANT_W:0]   mant_with_carry_r2;
     wire [MANT_W-1:0] mant24_right;
-    reg  [MANT_W-1:0] mant24_left;      // <<<<< 모듈 상단 선언
+    reg  [MANT_W-1:0] mant24_left;
     wire [MANT_W-1:0] mant24_norm_pre;
 
-    assign shift_right = (msb_idx >= (MANT_W-1));
     always @* begin
         if (shift_right) begin
             sr = msb_idx - (MANT_W-1);
@@ -112,55 +105,60 @@ module dequantize_elem #(
     end
 
     assign P_shifted_r = P >> sr;
-    always @* begin
-        if (sr == 0) round_bit = 1'b0;
-        else          round_bit = P[sr-1];
-    end
 
-    assign mant_with_carry_r = {1'b0, P_shifted_r[MANT_W-1:0]} + {{MANT_W{1'b0}}, round_bit};
-    assign mant24_right      = mant_with_carry_r[MANT_W] ?
-                               {1'b1, P_shifted_r[MANT_W-1:1]} :
-                               mant_with_carry_r[MANT_W-1:0];
+    // guard + sticky (변수 범위 슬라이스 금지: 마스크로 계산)
+    assign guard      = (sr > 0) ? P[sr-1] : 1'b0;
+    assign lower_mask = (sr > 1) ? ({PW{1'b1}} >> (PW - (sr-1))) : {PW{1'b0}}; // LSB에 (sr-1)개 1
+    assign sticky     = |(P & lower_mask);
 
+    // ties-to-even
+    assign round_up         = guard & (sticky | P_shifted_r[0]);
+    assign mant_with_carry_r2 =
+        {1'b0, P_shifted_r[MANT_W-1:0]} + {{MANT_W{1'b0}}, round_up};
+
+    // 캐리 발생 시 합산 결과 기준으로 정확히 1비트 이동
+    assign mant24_right = mant_with_carry_r2[MANT_W] ?
+                          mant_with_carry_r2[MANT_W:1] :
+                          mant_with_carry_r2[MANT_W-1:0];
+
+    // 왼쪽 경로: 상단 비트 슬라이싱 (변수 시프트 사용)
     always @* begin
-        // (P << sl)의 상위 MANT_W 비트 취득: (P << sl)[PW-1 : PW-MANT_W]
         mant24_left = (P << sl) >> (PW - MANT_W);
     end
 
-    assign mant24_norm_pre = shift_right ? mant24_right : mant24_left; // 24-bit 1.h
+    assign mant24_norm_pre = shift_right ? mant24_right : mant24_left; // 24-bit (1.h)
 
-    // ---------- mantissa adjustment to cancel /Q^2 bias ----------
-    reg [MANT_W+FIXP_K-1:0] prod_adj;           // <<<<< 모듈 상단 선언
-    reg [MANT_W:0]          mant24_adj_with_carry; // <<<<< 모듈 상단 선언
-    reg [MANT_W-1:0]        mant24_fixed;       // <<<<< 모듈 상단 선언
-    reg                     carry_up;           // <<<<< 모듈 상단 선언
+    // ---------- (근사) /Q^2 ≈ 1/2^14 : 지수 -14만 반영 ----------
+    localparam integer K_Q2 = LOG2_QSQ_CEIL; // 14
 
-    always @* begin
-        prod_adj = mant24_norm_pre * MANT_ADJ;
-        mant24_adj_with_carry = (prod_adj + (1 << (FIXP_K-1))) >> FIXP_K;
-        if (mant24_adj_with_carry[MANT_W]) begin
-            mant24_fixed = {1'b1, mant24_adj_with_carry[MANT_W:2]}; // 2.x -> 1.x
-            carry_up     = 1'b1;
-        end else begin
-            mant24_fixed = mant24_adj_with_carry[MANT_W-1:0];
-            carry_up     = 1'b0;
-        end
-    end
+    // ---------- 가수부만 미세 보정: 1.01578 ~= 1 + 1/64 + 1/8192 + 1/32768 ----------
+    // 1 + 1/64 + 1/8192 + 1/32768 = 1.0157775879... (1.01578과 오차 ~2.4e-06)
+    wire [MANT_W+2:0] base  = {3'b000, mant24_norm_pre};
+    wire [MANT_W+2:0] s6    = base >> 6;
+    wire [MANT_W+2:0] s13   = base >> 13;
+    wire [MANT_W+2:0] s15   = base >> 15;
+    wire [MANT_W+2:0] adj_sum = base + s6 + s13 + s15;
+
+    // 캐리 정규화 (2.x → 1.x) 및 캐리 플래그
+    wire                    adj_carry = adj_sum[MANT_W];
+    wire [MANT_W-1:0]       mant24_fixed = adj_carry ? adj_sum[MANT_W:1]
+                                                     : adj_sum[MANT_W-1:0];
+    wire                    carry_up     = adj_carry;
 
     // ---------- exponent combine ----------
-    integer new_unb;         // <<<<< 모듈 상단 선언
+    integer new_unb;
     always @* begin
-        new_unb = msb_idx + A_exp_unb - FP_MANT_W - LOG2_QSQ_CEIL + (carry_up ? 1 : 0);
+        // /2^K_Q2 는 지수에서 -K_Q2 로 처리, 가수 보정 캐리는 +1
+        new_unb = msb_idx + A_exp_unb - FP_MANT_W - K_Q2 + (carry_up ? 1 : 0);
     end
 
     // ---------- overflow / underflow / subnormal ----------
-    wire oflow, uflow;
-    assign oflow = (new_unb >  UNB_MAX);
-    assign uflow = (new_unb <  UNB_MIN);
+    wire oflow = (new_unb >  UNB_MAX);
+    wire uflow = (new_unb <  UNB_MIN);
 
-    integer need_shift_i;           // <<<<< 모듈 상단 선언
-    reg [MANT_W-1:0] mant24_sub;   // <<<<< 모듈 상단 선언
-    reg [MANT_W-1:0] add_rnd;      // <<<<< 모듈 상단 선언
+    integer need_shift_i;
+    reg [MANT_W-1:0] mant24_sub;
+    reg [MANT_W-1:0] add_rnd;
 
     always @* begin
         need_shift_i = UNB_MIN - new_unb; // positive => need to shift right
@@ -171,15 +169,16 @@ module dequantize_elem #(
         end else if (need_shift_i == 0) begin
             mant24_sub = mant24_fixed;
         end else begin
+            // subnormal 라운딩 (RN)
             add_rnd    = {{(MANT_W-1){1'b0}}, 1'b1} << (need_shift_i - 1);
             mant24_sub = (mant24_fixed + add_rnd) >> need_shift_i;
         end
     end
 
     // ---------- assemble IEEE754 ----------
-    reg  [FP_EXP_W-1:0]  exp_out;           // <<<<< 모듈 상단 선언
-    reg  [FP_MANT_W-1:0] frac_out;          // <<<<< 모듈 상단 선언
-    reg  [EW-1:0]        exp_new_raw_vec;   // <<<<< 모듈 상단 선언
+    reg  [FP_EXP_W-1:0]  exp_out;
+    reg  [FP_MANT_W-1:0] frac_out;
+    reg  [EW-1:0]        exp_new_raw_vec;
 
     always @* begin
         if (is_zero_path) begin
@@ -198,8 +197,7 @@ module dequantize_elem #(
         end
     end
 
-    wire [FP_DATA_W-1:0] mag_fp;
-    assign mag_fp = {1'b0, exp_out, frac_out};
+    wire [FP_DATA_W-1:0] mag_fp = {1'b0, exp_out, frac_out};
     assign r_data = sign_acc ? {1'b1, mag_fp[FP_DATA_W-2:0]} : mag_fp;
 
 endmodule
