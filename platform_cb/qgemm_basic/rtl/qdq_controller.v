@@ -26,7 +26,6 @@ module qdq_controller #(
     input  wire                         a_s_valid_i,
     output wire                         a_s_ready_o,
     input  wire [LANES_NUM*FP_DATA_W-1:0] a_s_data_i,
-
     output wire                         a_m_valid_o,
     input  wire                         a_m_ready_i,
     output wire [LANES_NUM*FP_DATA_W-1:0] a_m_data_o,
@@ -35,7 +34,6 @@ module qdq_controller #(
     input  wire                         b_s_valid_i,
     output wire                         b_s_ready_o,
     input  wire [LANES_NUM*FP_DATA_W-1:0] b_s_data_i,
-
     output wire                         b_m_valid_o,
     input  wire                         b_m_ready_i,
     output wire [LANES_NUM*FP_DATA_W-1:0] b_m_data_o,
@@ -45,8 +43,6 @@ module qdq_controller #(
     output wire                         dq_s_ready_o,
     input  wire                         dq_tfirst_i,    // 타일 첫 beat 표시
     input  wire [LANES_NUM*FP_DATA_W-1:0] dq_s_data_i,  // (정수/acc 포맷. 설계에 맞게 연결)
-
-    // dequantized FP out
     output wire                         dq_m_valid_o,
     input  wire                         dq_m_ready_i,
     output wire [LANES_NUM*FP_DATA_W-1:0] dq_m_data_o
