@@ -4,7 +4,7 @@
 // QDQ Controller
 // - Submodules:
 //    * quantize_array
-//    * dequantize_array  <-- (NEW) 스케일 선수신 후 ACC 수신/방출
+//    * dequantize_array
 //    * scale_cross_product
 //    * scale_fifo
 // ============================================================================
@@ -244,19 +244,5 @@ module qdq_controller #(
         .m_ready_i        (dq_m_ready_i),
         .m_data_o         (dq_m_data_o)
     );
-
-    // --------------------------------------------
-    // (옵션) 디버깅 파형
-    // synthesis translate_off
-    reg [FP_DATA_W-1:0] dbg_acc_in [0:LANES_NUM-1];
-    reg [FP_DATA_W-1:0] dbg_fp_out [0:LANES_NUM-1];
-    integer __i;
-    always @* begin
-        for (__i=0; __i<LANES_NUM; __i=__i+1) begin
-            dbg_acc_in[__i] = dq_s_data_i[(__i+1)*FP_DATA_W-1 -: FP_DATA_W];
-            dbg_fp_out[__i] = dq_m_data_o[(__i+1)*FP_DATA_W-1 -: FP_DATA_W];
-        end
-    end
-    // synthesis translate_on
 
 endmodule
