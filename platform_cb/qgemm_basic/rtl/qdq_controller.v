@@ -43,7 +43,6 @@ module qdq_controller #(
     // ACC tile → dequantize
     input  wire                           dq_s_valid_i,
     output wire                           dq_s_ready_o,
-    input  wire                           dq_tfirst_i,    // 호환용(미사용)
     input  wire [LANES_NUM*FP_DATA_W-1:0] dq_s_data_i,
 
     // dequantized FP out
@@ -55,9 +54,6 @@ module qdq_controller #(
     // utils
     function integer clog2; input integer v; integer i; begin i=0; while((1<<i)<v) i=i+1; clog2=i; end endfunction
     localparam integer ELEMS = MAT_SIZE*MAT_SIZE;
-
-    // tfirst 미사용 (lint 방지)
-    wire _unused_tfirst = dq_tfirst_i;
 
     // --------------------------------------------
     // 1) Quantize path (A/B)
