@@ -92,23 +92,4 @@ module scale_fifo #(
         end
     end
 
-
-    /////////////////////////////////////////////////////////////
-    // 디버깅용 로직
-    /////////////////////////////////////////////////////////////
-    // 플랫 입력 버스 -> 2차원 reg (웨이브 보기용)
-    reg [FP_MANT_W-1:0] mant_in_reg [0:MAT_SIZE-1][0:MAT_SIZE-1];
-    reg [FP_EXP_W -1:0] exp_in_reg  [0:MAT_SIZE-1][0:MAT_SIZE-1];
-    
-    integer __r, __c, __idx;
-    always @* begin
-        for (__r = 0; __r < MAT_SIZE; __r = __r + 1) begin
-            for (__c = 0; __c < MAT_SIZE; __c = __c + 1) begin
-                __idx = __r*MAT_SIZE + __c;
-                mant_in_reg[__r][__c] = mant_in_i[(__idx+1)*FP_MANT_W-1 -: FP_MANT_W];
-                exp_in_reg [__r][__c] = exp_in_i [(__idx+1)*FP_EXP_W -1  -: FP_EXP_W];
-            end
-        end
-    end
-
 endmodule
