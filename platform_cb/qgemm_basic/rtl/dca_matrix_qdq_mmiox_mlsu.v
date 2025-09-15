@@ -242,7 +242,7 @@ assign mo_sinst_wdata  = {mo_info, OPC_WRITE};
 assign control_rmx_inst_fifo_rrequest = ((q_state==S_STORE) & q_go_idle) | ((dq_state==S_STORE) & dq_go_idle);
 assign control_rmx_operation_finish   = (q_state==S_IDLE) & (dq_state==S_IDLE);
 
-// ---------------- conv2d-style LOAD bypass → qdq ----------------
+// ---------------- LOAD bypass → qdq ----------------
 // sent 카운터 기반 valid/ready → fire로만 진행
 
 // qdq handshakes
@@ -368,7 +368,7 @@ always @(posedge clk or negedge rstnn) begin
   else if (dq_out_fire && !out_full) out_wcnt <= out_wcnt + 1'b1;
 end
 
-// FSM go conditions: conv2d 스트리밍 패턴
+// FSM go conditions
 reg  qa_store_req,    qb_store_req,    out_store_req;
 wire qa_store_busy, qb_store_busy, out_store_busy;
 
@@ -442,7 +442,7 @@ DCA_MATRIX_REGISTER_TYPE3 #(
   .all_rdata_list2d(), .upmost_rdata_list1d()
 );
 
-// MREG2STORE (conv2d 스타일: store_wrequest 레벨 유지)
+// MREG2STORE
 wire qa_store_wready, qb_store_wready, out_store_wready;
 
 always @(posedge clk or negedge rstnn) begin
