@@ -243,7 +243,6 @@ assign control_rmx_inst_fifo_rrequest = ((q_state==S_STORE) & q_go_idle) | ((dq_
 assign control_rmx_operation_finish   = (q_state==S_IDLE) & (dq_state==S_IDLE);
 
 // ---------------- LOAD bypass → qdq ----------------
-// sent 카운터 기반 valid/ready → fire로만 진행
 
 // qdq handshakes
 wire a_s_ready_o, b_s_ready_o, dq_s_ready_o;
@@ -257,7 +256,7 @@ wire a_fire = mi_sload_tensor_row_wvalid & mi_sload_tensor_row_wready;
 
 always @(posedge clk or negedge rstnn) begin
   if(!rstnn)             a_sent <= '0;
-  else if (q_go_exec)    a_sent <= '0;          // 시작 펄스에서만 초기화
+  else if (q_go_exec)    a_sent <= '0;
   else if (a_fire)       a_sent <= a_sent + 1'b1;
 end
 
@@ -457,7 +456,6 @@ always @(posedge clk or negedge rstnn) begin
   else if (qb_store_wready)            qb_store_req <= 1'b0;
 end
 
-// OUT 쪽도 동일 패턴 유지
 always @(posedge clk or negedge rstnn) begin
   if (!rstnn)                             out_store_req <= 1'b0;
   else if ((dq_state==S_EXEC) && out_full) out_store_req <= 1'b1;
