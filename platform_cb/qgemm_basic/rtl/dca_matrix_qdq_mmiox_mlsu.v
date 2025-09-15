@@ -512,19 +512,4 @@ DCA_MATRIX_MREG2STORE #(
   .store_tensor_row_rdata (mo_sstore_tensor_row_rdata)
 );
 
-/////////////////////////////////////////////////////////////
-// 디버깅용 로직
-/////////////////////////////////////////////////////////////
-// 플랫 입력 버스 -> 2차원 reg (웨이브 보기용)
-reg [BW_TENSOR_SCALAR-1:0] mi_sload_tensor_row_wdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
-reg [BW_TENSOR_SCALAR-1:0] mi_sstore_tensor_row_rdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
-
-integer __r, __idx;
-always @* begin
-    for (__r = 0; __r < GET_MATRIX_NUM_COL(16); __r = __r + 1) begin
-        mi_sload_tensor_row_wdata_reg[__r] = mi_sload_tensor_row_wdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
-        mi_sstore_tensor_row_rdata_reg[__r] = mi_sstore_tensor_row_rdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
-    end
-end
-
 endmodule
