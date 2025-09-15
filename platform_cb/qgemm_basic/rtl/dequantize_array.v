@@ -60,9 +60,9 @@ module dequantize_array #(
     always @* begin
         state_n = state;
         case (state)
-          S_WAIT_SCL: if (scl_valid_i && scl_ready_o)      state_n = S_FILL_ACC;
-          S_FILL_ACC: if (fill_fire && (in_beat==IN_BEATS-1)) state_n = S_EMIT;
-          S_EMIT    : if (emit_fire && (out_beat==IN_BEATS-1)) state_n = S_WAIT_SCL;
+          S_WAIT_SCL: if (scl_valid_i && scl_ready_o)           state_n = S_FILL_ACC;
+          S_FILL_ACC: if (fill_fire && (in_beat==IN_BEATS-1))   state_n = S_EMIT;
+          S_EMIT    : if (emit_fire && (out_beat==IN_BEATS-1))  state_n = S_WAIT_SCL;
         endcase
     end
 
@@ -102,10 +102,8 @@ module dequantize_array #(
         end
     end
 
-    // ready/valid
-    assign scl_ready_o = (state==S_WAIT_SCL) & (~scl_captured); // 스케일 먼저
-    assign s_ready_o   = (state==S_FILL_ACC);                   // 스케일 받은 뒤에만 ACC 허용
-    assign m_valid_o   = (state==S_EMIT);
+    assign scl_ready_o = (state==S_WAIT_SCL) & (~scl_captured); // pop 1펄스 동작
+    assign s_ready_o   = (state==S_FILL_ACC);
 
     // ---------------- FILL_ACC ----------------
     wire [EIDX_W-1:0] in_base_idx = in_beat * LANES_NUM;
@@ -130,6 +128,9 @@ module dequantize_array #(
 
     wire [EIDX_W-1:0] out_base_idx = out_beat * LANES_NUM;
 
+    // 조합으로 계산되는 한 사이클 앞 데이터
+    wire [LANES_NUM*FP_DATA_W-1:0] m_data_c;
+
     genvar gl;
     generate
         for (gl=0; gl<LANES_NUM; gl=gl+1) begin : G_EMIT
@@ -143,14 +144,36 @@ module dequantize_array #(
             dequantize_elem #(
                 .FP_DATA_W(FP_DATA_W), .FP_MANT_W(FP_MANT_W), .FP_EXP_W(FP_EXP_W),
                 .FP_EXP_BIAS(FP_EXP_BIAS), .BIT_NUM(BIT_NUM)
-            ) u_deq (
+            ) dequantize_elem_i (
                 .acc_i           (acc_l),
                 .mantissa_scale_i(mant_l),
                 .exp_scale_i     (exp_l),
                 .r_data_o        (r_l)
             );
 
-            assign m_data_o[(gl+1)*FP_DATA_W-1 -: FP_DATA_W] = r_l;
+            assign m_data_c[(gl+1)*FP_DATA_W-1 -: FP_DATA_W] = r_l;
         end
     endgenerate
+
+    reg                           m_valid_q;
+    reg [LANES_NUM*FP_DATA_W-1:0] m_data_q;
+
+    always @(posedge clk or negedge rstnn) begin
+        if (!rstnn) begin
+            m_valid_q <= 1'b0;
+            m_data_q  <= '0;
+        end else begin
+            if (state==S_EMIT) begin
+                m_valid_q <= 1'b1;
+                m_data_q  <= m_data_c;
+            end else begin
+                m_valid_q <= 1'b0;
+                m_data_q  <= '0;
+            end
+        end
+    end
+
+    assign m_valid_o = m_valid_q;
+    assign m_data_o  = m_data_q;
+
 endmodule
