@@ -62,7 +62,6 @@ module tb_qdq_controller;
     // Dequant ACC in
     reg                            dq_s_valid_i;
     wire                           dq_s_ready_o;
-    reg                            dq_tfirst_i;
     reg  [LANES_NUM*FP_DATA_W-1:0] dq_s_data_i;
     // Dequant FP out
     wire                           dq_m_valid_o;
@@ -109,7 +108,6 @@ module tb_qdq_controller;
 
         .dq_s_valid_i   (dq_s_valid_i),
         .dq_s_ready_o   (dq_s_ready_o),
-        .dq_tfirst_i    (dq_tfirst_i),
         .dq_s_data_i    (dq_s_data_i),
 
         .dq_m_valid_o   (dq_m_valid_o),
@@ -294,7 +292,6 @@ module tb_qdq_controller;
         begin
             dq_s_valid_i = 1'b0;
             dq_s_data_i  = '0;
-            dq_tfirst_i  = 1'b0;
             @(posedge clk);
             for (beat=0; beat<BEATS; beat++) begin
                 for (lane=0; lane<LANES_NUM; lane++) begin
@@ -308,13 +305,11 @@ module tb_qdq_controller;
                         dq_s_data_i[(lane+1)*FP_DATA_W-1 -: FP_DATA_W] = '0;
                     end
                 end
-                dq_tfirst_i  = (beat==0);
                 dq_s_valid_i = 1'b1;
                 while (!dq_s_ready_o) @(posedge clk);
                 @(posedge clk);
                 dq_s_valid_i = 1'b0;
             end
-            dq_tfirst_i = 1'b0;
         end
     endtask
 
@@ -753,7 +748,7 @@ module tb_qdq_controller;
         rstnn = 1'b0;
         a_s_valid_i = 0; a_s_data_i = '0;
         b_s_valid_i = 0; b_s_data_i = '0;
-        dq_s_valid_i= 0; dq_s_data_i= '0; dq_tfirst_i=0;
+        dq_s_valid_i= 0; dq_s_data_i= '0;
         a_m_ready_i = 1'b1;
         b_m_ready_i = 1'b1;
         dq_m_ready_i= 1'b1;
