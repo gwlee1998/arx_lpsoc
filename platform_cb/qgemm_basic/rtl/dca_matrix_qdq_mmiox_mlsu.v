@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 // ============================================================================
 // DCA_MATRIX_QDQ_MMIOX_MLSU  (conv2d-style load/store)
-// - LOAD: sload → qdq (bypass)  *MREG read 안함*
-// - STORE: qdq out → MREG(TYPE3) → MREG2STORE (store_wrequest level 유지)
+// - LOAD: sload → qdq (bypass)
+// - STORE: qdq out → MREG(TYPE3) → MREG2STORE
 // - PIPE:  A/B quant → (외부 GEMM) → ACC sload → dequant → OUT store(FP)
 // ============================================================================
 
@@ -29,6 +29,12 @@ module DCA_MATRIX_QDQ_MMIOX_MLSU
   control_rmx_inst_fifo_rdata,
   control_rmx_inst_fifo_rrequest,
   control_rmx_operation_finish,
+  control_rmx_input_fifo_rready,
+  control_rmx_input_fifo_rdata,
+  control_rmx_input_fifo_rrequest,
+  control_rmx_output_fifo_wready,
+  control_rmx_output_fifo_wrequest,
+  control_rmx_output_fifo_wdata,
 
   mi_sinst_wvalid,
   mi_sinst_wdata,
@@ -75,6 +81,7 @@ module DCA_MATRIX_QDQ_MMIOX_MLSU
   mo_sstore_tensor_row_rready,
   mo_sstore_tensor_row_rdata
 );
+
 parameter BIT_NUM          = 8;
 parameter FP_EXP_W         = 8;
 parameter FP_MANT_W        = 23;
@@ -85,6 +92,13 @@ parameter integer INPUT_MATRIX_SIZE  = 16;
 parameter integer KERNEL_MATRIX_SIZE = 16;
 parameter integer OUTPUT_MATRIX_SIZE = 16;
 parameter TENSOR_PARA = 0;
+
+localparam BW_CONFIG = 1;
+localparam BW_STATUS = `BW_DCA_MATRIX_CONV2D_STATUS;
+localparam BW_LOG = `BW_DCA_MATRIX_CONV2D_LOG;
+localparam BW_INST = `BW_DCA_MATRIX_CONV2D_INST;
+localparam BW_INPUT = 32;
+localparam BW_OUTPUT = 32;
 
 // ----------------------------------------------------------------------------
 `include "dca_matrix_dim_util.vb"
@@ -108,78 +122,82 @@ input  wire clk;
 input  wire rstnn;
 
 // Control / MMIO
-input  wire [0:0] control_rmx_core_config;
-output wire [`BW_DCA_MATRIX_CONV2D_STATUS-1:0] control_rmx_core_status;
-input  wire control_rmx_clear_request;
+input wire [(BW_CONFIG)-1:0] control_rmx_core_config;
+output wire [(BW_STATUS)-1:0] control_rmx_core_status;
+input wire control_rmx_clear_request;
 output wire control_rmx_clear_finish;
-input  wire control_rmx_log_fifo_wready;
+input wire control_rmx_log_fifo_wready;
 output wire control_rmx_log_fifo_wrequest;
-output wire [`BW_DCA_MATRIX_CONV2D_LOG-1:0]   control_rmx_log_fifo_wdata;
-input  wire control_rmx_inst_fifo_rready;
-input  wire [`BW_DCA_MATRIX_CONV2D_INST-1:0]  control_rmx_inst_fifo_rdata;
+output wire [(BW_LOG)-1:0] control_rmx_log_fifo_wdata;
+input wire control_rmx_inst_fifo_rready;
+input wire [(BW_INST)-1:0] control_rmx_inst_fifo_rdata;
 output wire control_rmx_inst_fifo_rrequest;
 output wire control_rmx_operation_finish;
+input wire control_rmx_input_fifo_rready;
+input wire [(BW_INPUT)-1:0] control_rmx_input_fifo_rdata;
+output wire control_rmx_input_fifo_rrequest;
+input wire control_rmx_output_fifo_wready;
+output wire control_rmx_output_fifo_wrequest;
+output wire [(BW_OUTPUT)-1:0] control_rmx_output_fifo_wdata;
+
 
 // A LSU (FP in → QA out)
 output wire mi_sinst_wvalid;
-output wire [`BW_DCA_MATRIX_LSU_INST-1:0] mi_sinst_wdata;
-input  wire mi_sinst_wready;
-input  wire mi_sinst_decode_finish;
-input  wire mi_sinst_execute_finish;
-input  wire mi_sinst_busy;
-
-input  wire mi_sload_tensor_row_wvalid;
-input  wire mi_sload_tensor_row_wlast;
-input  wire [BW_TENSOR_SCALAR*GET_MATRIX_NUM_COL(16)-1:0] mi_sload_tensor_row_wdata;
+output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mi_sinst_wdata;
+input wire mi_sinst_wready;
+input wire mi_sinst_decode_finish;
+input wire mi_sinst_execute_finish;
+input wire mi_sinst_busy;
+input wire mi_sload_tensor_row_wvalid;
+input wire mi_sload_tensor_row_wlast;
+input wire [BW_INPUT_TENSOR_ROW-1:0] mi_sload_tensor_row_wdata;
 output wire mi_sload_tensor_row_wready;
-
-input  wire mi_sstore_tensor_row_rvalid;
-input  wire mi_sstore_tensor_row_rlast;
+input wire mi_sstore_tensor_row_rvalid;
+input wire mi_sstore_tensor_row_rlast;
 output wire mi_sstore_tensor_row_rready;
-output wire [BW_TENSOR_SCALAR*GET_MATRIX_NUM_COL(16)-1:0] mi_sstore_tensor_row_rdata;
+output wire [BW_INPUT_TENSOR_ROW-1:0] mi_sstore_tensor_row_rdata;
 
-// B LSU (FP in → QB out)
 output wire mk_sinst_wvalid;
-output wire [`BW_DCA_MATRIX_LSU_INST-1:0] mk_sinst_wdata;
-input  wire mk_sinst_wready;
-input  wire mk_sinst_decode_finish;
-input  wire mk_sinst_execute_finish;
-input  wire mk_sinst_busy;
-
-input  wire mk_sload_tensor_row_wvalid;
-input  wire mk_sload_tensor_row_wlast;
-input  wire [BW_TENSOR_SCALAR*GET_MATRIX_NUM_COL(16)-1:0] mk_sload_tensor_row_wdata;
+output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mk_sinst_wdata;
+input wire mk_sinst_wready;
+input wire mk_sinst_decode_finish;
+input wire mk_sinst_execute_finish;
+input wire mk_sinst_busy;
+input wire mk_sload_tensor_row_wvalid;
+input wire mk_sload_tensor_row_wlast;
+input wire [BW_KERNEL_TENSOR_ROW-1:0] mk_sload_tensor_row_wdata;
 output wire mk_sload_tensor_row_wready;
-
-input  wire mk_sstore_tensor_row_rvalid;
-input  wire mk_sstore_tensor_row_rlast;
+input wire mk_sstore_tensor_row_rvalid;
+input wire mk_sstore_tensor_row_rlast;
 output wire mk_sstore_tensor_row_rready;
-output wire [BW_TENSOR_SCALAR*GET_MATRIX_NUM_COL(16)-1:0] mk_sstore_tensor_row_rdata;
+output wire [BW_KERNEL_TENSOR_ROW-1:0] mk_sstore_tensor_row_rdata;
 
-// OUT LSU (ACC int32 in → FP out)
 output wire mo_sinst_wvalid;
-output wire [`BW_DCA_MATRIX_LSU_INST-1:0] mo_sinst_wdata;
-input  wire mo_sinst_wready;
-input  wire mo_sinst_decode_finish;
-input  wire mo_sinst_execute_finish;
-input  wire mo_sinst_busy;
-
-input  wire mo_sload_tensor_row_wvalid;
-input  wire mo_sload_tensor_row_wlast;
-input  wire [BW_TENSOR_SCALAR*GET_MATRIX_NUM_COL(16)-1:0] mo_sload_tensor_row_wdata;
+output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mo_sinst_wdata;
+input wire mo_sinst_wready;
+input wire mo_sinst_decode_finish;
+input wire mo_sinst_execute_finish;
+input wire mo_sinst_busy;
+input wire mo_sload_tensor_row_wvalid;
+input wire mo_sload_tensor_row_wlast;
+input wire [BW_OUTPUT_TENSOR_ROW-1:0] mo_sload_tensor_row_wdata;
 output wire mo_sload_tensor_row_wready;
-input  wire mo_sstore_tensor_row_rvalid;
-input  wire mo_sstore_tensor_row_rlast;
+input wire mo_sstore_tensor_row_rvalid;
+input wire mo_sstore_tensor_row_rlast;
 output wire mo_sstore_tensor_row_rready;
-output wire [BW_TENSOR_SCALAR*GET_MATRIX_NUM_COL(16)-1:0] mo_sstore_tensor_row_rdata;
+output wire [BW_OUTPUT_TENSOR_ROW-1:0] mo_sstore_tensor_row_rdata;
 
 // ---------------- Control ties ----------------
-assign control_rmx_core_status       = '0;
-assign control_rmx_clear_finish      = 1'b0;
-assign control_rmx_log_fifo_wrequest = 1'b0;
-assign control_rmx_log_fifo_wdata    = '0;
+// not used
+assign control_rmx_core_status = 0;
+assign control_rmx_clear_finish = 0;
+assign control_rmx_log_fifo_wrequest = 0;
+assign control_rmx_log_fifo_wdata = 0;
+assign control_rmx_input_fifo_rrequest = 0;
+assign control_rmx_output_fifo_wrequest = 0;
+assign control_rmx_output_fifo_wdata = 0;
 
-// ---------------- Inst decode (pack like conv2d) ----------------
+// ---------------- Inst decode ----------------
 wire [`BW_DCA_MATRIX_INFO_ALIGNED-1:0] mi_info, mk_info, mo_info;
 wire [`BW_DCA_MATRIX_CONV2D_INST_STRIDE_M1-1:0] inst_stride_m1;
 wire [`BW_DCA_MATRIX_CONV2D_INST_PAD-1:0]       inst_pad;
@@ -276,9 +294,6 @@ always @(posedge clk or negedge rstnn) begin
   else if (acc_fire)    acc_sent <= acc_sent + 1'b1;
 end
 
-// (tfirst는 더이상 쓰지 않음. qdq_controller에서도 의존 제거)
-wire dq_tfirst_i = (dq_state==S_EXEC) & (acc_sent==0);
-
 // ---------------- qdq controller ----------------
 wire a_m_valid_o, b_m_valid_o, dq_m_valid_o;
 wire a_m_ready_i, b_m_ready_i, dq_m_ready_i;
@@ -313,7 +328,6 @@ qdq_controller #(
   // ACC dequant (bypass from sload)
   .dq_s_valid_i ( dq_s_valid_i ),
   .dq_s_ready_o ( dq_s_ready_o ),
-  .dq_tfirst_i  ( dq_tfirst_i ),
   .dq_s_data_i  ( dq_s_data_i ),
   .dq_m_valid_o ( dq_m_valid_o ),
   .dq_m_ready_i ( dq_m_ready_i ),
