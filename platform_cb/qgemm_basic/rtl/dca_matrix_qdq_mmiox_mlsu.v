@@ -89,7 +89,7 @@ parameter FP_EXP_BIAS      = 127;
 parameter SCALE_FIFO_DEPTH = 4;
 
 parameter integer INPUT_MATRIX_SIZE  = 16;
-parameter integer KERNEL_MATRIX_SIZE = 16;
+parameter integer WEIGHT_MATRIX_SIZE = 16;
 parameter integer OUTPUT_MATRIX_SIZE = 16;
 parameter TENSOR_PARA = 0;
 
