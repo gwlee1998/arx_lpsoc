@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 // ============================================================================
-// DCA_MATRIX_QDQ_MMIOX_MLSU  (conv2d-style load/store)
+// DCA_MATRIX_QDQ_MMIOX_MLSU
 // - LOAD: sload → qdq (bypass)
 // - STORE: qdq out → MREG(TYPE3) → MREG2STORE
 // - PIPE:  A/B quant → (외부 GEMM) → ACC sload → dequant → OUT store(FP)
@@ -94,9 +94,9 @@ parameter integer OUTPUT_MATRIX_SIZE = 16;
 parameter TENSOR_PARA = 0;
 
 localparam BW_CONFIG = 1;
-localparam BW_STATUS = `BW_DCA_MATRIX_CONV2D_STATUS;
-localparam BW_LOG = `BW_DCA_MATRIX_CONV2D_LOG;
-localparam BW_INST = `BW_DCA_MATRIX_CONV2D_INST;
+localparam BW_STATUS = `BW_DCA_MATRIX_QDQ_STATUS;  // not used
+localparam BW_LOG = `BW_DCA_MATRIX_QDQ_LOG;  // not used
+localparam BW_INST = `BW_DCA_MATRIX_QDQ_INST;
 localparam BW_INPUT = 32;
 localparam BW_OUTPUT = 32;
 
@@ -106,11 +106,11 @@ localparam BW_OUTPUT = 32;
 // ----------------------------------------------------------------------------
 
 localparam integer INPUT_MATRIX_NUM_COL   = GET_MATRIX_NUM_COL(INPUT_MATRIX_SIZE);
-localparam integer KERNEL_MATRIX_NUM_COL  = GET_MATRIX_NUM_COL(KERNEL_MATRIX_SIZE);
+localparam integer WEIGHT_MATRIX_NUM_COL  = GET_MATRIX_NUM_COL(WEIGHT_MATRIX_SIZE);
 localparam integer OUTPUT_MATRIX_NUM_COL  = GET_MATRIX_NUM_COL(OUTPUT_MATRIX_SIZE);
 
 localparam integer BW_INPUT_TENSOR_ROW   = BW_TENSOR_SCALAR*INPUT_MATRIX_NUM_COL;
-localparam integer BW_KERNEL_TENSOR_ROW  = BW_TENSOR_SCALAR*KERNEL_MATRIX_NUM_COL;
+localparam integer BW_WEIGHT_TENSOR_ROW  = BW_TENSOR_SCALAR*WEIGHT_MATRIX_NUM_COL;
 localparam integer BW_OUTPUT_TENSOR_ROW  = BW_TENSOR_SCALAR*OUTPUT_MATRIX_NUM_COL;
 
 localparam [`BW_DCA_MATRIX_LSU_INST_OPCODE-1:0] OPC_READ  = `DCA_MATRIX_LSU_INST_OPCODE_READ;
@@ -165,12 +165,12 @@ input wire mk_sinst_execute_finish;
 input wire mk_sinst_busy;
 input wire mk_sload_tensor_row_wvalid;
 input wire mk_sload_tensor_row_wlast;
-input wire [BW_KERNEL_TENSOR_ROW-1:0] mk_sload_tensor_row_wdata;
+input wire [BW_WEIGHT_TENSOR_ROW-1:0] mk_sload_tensor_row_wdata;
 output wire mk_sload_tensor_row_wready;
 input wire mk_sstore_tensor_row_rvalid;
 input wire mk_sstore_tensor_row_rlast;
 output wire mk_sstore_tensor_row_rready;
-output wire [BW_KERNEL_TENSOR_ROW-1:0] mk_sstore_tensor_row_rdata;
+output wire [BW_WEIGHT_TENSOR_ROW-1:0] mk_sstore_tensor_row_rdata;
 
 output wire mo_sinst_wvalid;
 output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mo_sinst_wdata;
@@ -199,9 +199,7 @@ assign control_rmx_output_fifo_wdata = 0;
 
 // ---------------- Inst decode ----------------
 wire [`BW_DCA_MATRIX_INFO_ALIGNED-1:0] mi_info, mk_info, mo_info;
-wire [`BW_DCA_MATRIX_CONV2D_INST_STRIDE_M1-1:0] inst_stride_m1;
-wire [`BW_DCA_MATRIX_CONV2D_INST_PAD-1:0]       inst_pad;
-assign {inst_pad,inst_stride_m1,mo_info,mk_info,mi_info} = control_rmx_inst_fifo_rdata;
+assign {mo_info,mk_info,mi_info} = control_rmx_inst_fifo_rdata;
 
 // ---------------- Dual FSM ----------------
 localparam [1:0] S_IDLE=2'd0, S_LOAD=2'd1, S_EXEC=2'd2, S_STORE=2'd3;
@@ -243,6 +241,7 @@ assign control_rmx_inst_fifo_rrequest = ((q_state==S_STORE) & q_go_idle) | ((dq_
 assign control_rmx_operation_finish   = (q_state==S_IDLE) & (dq_state==S_IDLE);
 
 // ---------------- LOAD bypass → qdq ----------------
+// sent 카운터 기반 valid/ready → fire로만 진행
 
 // qdq handshakes
 wire a_s_ready_o, b_s_ready_o, dq_s_ready_o;
@@ -256,12 +255,12 @@ wire a_fire = mi_sload_tensor_row_wvalid & mi_sload_tensor_row_wready;
 
 always @(posedge clk or negedge rstnn) begin
   if(!rstnn)             a_sent <= '0;
-  else if (q_go_exec)    a_sent <= '0;
+  else if (q_go_exec)    a_sent <= '0;          // 시작 펄스에서만 초기화
   else if (a_fire)       a_sent <= a_sent + 1'b1;
 end
 
 // B stream
-localparam int B_ROWS = KERNEL_MATRIX_NUM_COL;
+localparam int B_ROWS = WEIGHT_MATRIX_NUM_COL;
 reg  [$clog2(B_ROWS+1)-1:0] b_sent;
 wire b_valid = (q_state==S_EXEC) & (b_sent < B_ROWS);
 assign mk_sload_tensor_row_wready = b_valid & b_s_ready_o;
@@ -297,7 +296,7 @@ end
 wire a_m_valid_o, b_m_valid_o, dq_m_valid_o;
 wire a_m_ready_i, b_m_ready_i, dq_m_ready_i;
 wire [BW_INPUT_TENSOR_ROW-1:0]  a_m_data_o;
-wire [BW_KERNEL_TENSOR_ROW-1:0] b_m_data_o;
+wire [BW_WEIGHT_TENSOR_ROW-1:0] b_m_data_o;
 wire [BW_OUTPUT_TENSOR_ROW-1:0] dq_m_data_o;
 
 qdq_controller #(
@@ -388,7 +387,7 @@ assign dq_go_idle  = (dq_state==S_STORE) &
 wire                           qa_mreg2store_ren;
 wire [BW_INPUT_TENSOR_ROW-1:0] qa_mreg2store_rdata;
 wire                           qb_mreg2store_ren;
-wire [BW_KERNEL_TENSOR_ROW-1:0] qb_mreg2store_rdata;
+wire [BW_WEIGHT_TENSOR_ROW-1:0] qb_mreg2store_rdata;
 wire                           out_mreg2store_ren;
 wire [BW_OUTPUT_TENSOR_ROW-1:0] out_mreg2store_rdata;
 
@@ -411,9 +410,9 @@ DCA_MATRIX_REGISTER_TYPE3 #(
 
 // QB buffer
 DCA_MATRIX_REGISTER_TYPE3 #(
-  .MATRIX_SIZE_PARA(KERNEL_MATRIX_SIZE),
+  .MATRIX_SIZE_PARA(WEIGHT_MATRIX_SIZE),
   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
-  .BW_MOVE_DATA(BW_KERNEL_TENSOR_ROW),
+  .BW_MOVE_DATA(BW_WEIGHT_TENSOR_ROW),
   .RESET_VALUE(MREG_RESET_VALUE)
 ) i_mregQB (
   .clk(clk), .rstnn(rstnn),
@@ -456,6 +455,7 @@ always @(posedge clk or negedge rstnn) begin
   else if (qb_store_wready)            qb_store_req <= 1'b0;
 end
 
+// OUT 쪽도 동일 패턴 유지
 always @(posedge clk or negedge rstnn) begin
   if (!rstnn)                             out_store_req <= 1'b0;
   else if ((dq_state==S_EXEC) && out_full) out_store_req <= 1'b1;
@@ -479,7 +479,7 @@ DCA_MATRIX_MREG2STORE #(
 );
 
 DCA_MATRIX_MREG2STORE #(
-  .MATRIX_SIZE_PARA(KERNEL_MATRIX_SIZE),
+  .MATRIX_SIZE_PARA(WEIGHT_MATRIX_SIZE),
   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR)
 ) i_mreg2store_QB (
   .clk(clk), .rstnn(rstnn),
@@ -509,5 +509,20 @@ DCA_MATRIX_MREG2STORE #(
   .store_tensor_row_rready(mo_sstore_tensor_row_rready),
   .store_tensor_row_rdata (mo_sstore_tensor_row_rdata)
 );
+
+/////////////////////////////////////////////////////////////
+// 디버깅용 로직
+/////////////////////////////////////////////////////////////
+// 플랫 입력 버스 -> 2차원 reg (웨이브 보기용)
+reg [BW_TENSOR_SCALAR-1:0] mi_sload_tensor_row_wdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
+reg [BW_TENSOR_SCALAR-1:0] mi_sstore_tensor_row_rdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
+
+integer __r, __idx;
+always @* begin
+    for (__r = 0; __r < GET_MATRIX_NUM_COL(16); __r = __r + 1) begin
+        mi_sload_tensor_row_wdata_reg[__r] = mi_sload_tensor_row_wdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
+        mi_sstore_tensor_row_rdata_reg[__r] = mi_sstore_tensor_row_rdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
+    end
+end
 
 endmodule
