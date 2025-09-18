@@ -1,0 +1,283 @@
+<?xml version="1.0" ?>
+<rvx>
+  <interface>
+    <name>i_dca_matrix_qgemm_control</name>
+    <role>receiver</role>
+    <parameter>
+      <id>bw_config</id>
+      <value type="text">1</value>
+    </parameter>
+    <parameter>
+      <id>bw_status</id>
+      <value type="text">32</value>
+    </parameter>
+    <parameter>
+      <id>bw_log</id>
+      <value type="text">32</value>
+    </parameter>
+    <parameter>
+      <id>bw_inst</id>
+      <value type="text">512</value>
+    </parameter>
+    <parameter>
+      <id>bw_input</id>
+      <value type="text">32</value>
+    </parameter>
+    <parameter>
+      <id>bw_output</id>
+      <value type="text">32</value>
+    </parameter>
+    <parameter>
+      <id>config_default_value</id>
+      <value type="text">0</value>
+    </parameter>
+    <parameter>
+      <id>log_fifo_depth</id>
+      <value type="text">0</value>
+    </parameter>
+    <parameter>
+      <id>inst_fifo_depth</id>
+      <value type="text">4</value>
+    </parameter>
+    <parameter>
+      <id>input_fifo_depth</id>
+      <value type="text">0</value>
+    </parameter>
+    <parameter>
+      <id>output_fifo_depth</id>
+      <value type="text">0</value>
+    </parameter>
+    <sync>clk</sync>
+    <init>rstnn</init>
+    <signal>
+      <name>mx_core_config</name>
+      <width type="text">1</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_core_status</name>
+      <width type="text">32</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_clear_request</name>
+      <width type="dec">1</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_clear_finish</name>
+      <width type="dec">1</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_log_fifo_wready</name>
+      <width type="dec">1</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_log_fifo_wrequest</name>
+      <width type="dec">1</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_log_fifo_wdata</name>
+      <width type="text">32</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_inst_fifo_rready</name>
+      <width type="dec">1</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_inst_fifo_rdata</name>
+      <width type="text">512</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_inst_fifo_rrequest</name>
+      <width type="dec">1</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_operation_finish</name>
+      <width type="dec">1</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_input_fifo_rready</name>
+      <width type="dec">1</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_input_fifo_rdata</name>
+      <width type="text">32</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_input_fifo_rrequest</name>
+      <width type="dec">1</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_output_fifo_wready</name>
+      <width type="dec">1</width>
+      <port>input</port>
+    </signal>
+    <signal>
+      <name>mx_output_fifo_wrequest</name>
+      <width type="dec">1</width>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>mx_output_fifo_wdata</name>
+      <width type="text">32</width>
+      <port>output</port>
+    </signal>
+    <library_name>mmiox1</library_name>
+  </interface>
+  <ip_instance>
+    <name>i_dca_matrix_qgemm</name>
+    <library_name>dca_matrix_qgemm_mmiox_mlsu</library_name>
+    <parameter>
+      <id>BW_ADDR</id>
+      <value type="dec">32</value>
+    </parameter>
+    <parameter>
+      <id>MA_BW_DATA</id>
+      <value type="dec">128</value>
+    </parameter>
+    <parameter>
+      <id>MB_BW_DATA</id>
+      <value type="dec">128</value>
+    </parameter>
+    <parameter>
+      <id>MC_BW_DATA</id>
+      <value type="dec">128</value>
+    </parameter>
+    <parameter>
+      <id>INPUT_MATRIX_SIZE</id>
+      <value type="dec">16</value>
+    </parameter>
+    <parameter>
+      <id>WEIGHT_MATRIX_SIZE</id>
+      <value type="dec">16</value>
+    </parameter>
+    <parameter>
+      <id>OUTPUT_MATRIX_SIZE</id>
+      <value type="dec">16</value>
+    </parameter>
+    <parameter>
+      <id>TENSOR_PARA</id>
+      <value type="dec">32</value>
+    </parameter>
+    <parameter>
+      <id>BW_CONFIG</id>
+      <value type="dec">1</value>
+    </parameter>
+    <parameter>
+      <id>BW_STATUS</id>
+      <value type="dec">32</value>
+    </parameter>
+    <parameter>
+      <id>BW_LOG</id>
+      <value type="dec">32</value>
+    </parameter>
+    <parameter>
+      <id>BW_INST</id>
+      <value type="dec">512</value>
+    </parameter>
+    <parameter>
+      <id>BW_INPUT</id>
+      <value type="dec">32</value>
+    </parameter>
+    <parameter>
+      <id>BW_OUTPUT</id>
+      <value type="dec">32</value>
+    </parameter>
+    <parameter>
+      <id>CONFIG_DEFAULT_VALUE</id>
+      <value type="dec">0</value>
+    </parameter>
+    <parameter>
+      <id>LOG_FIFO_DEPTH</id>
+      <value type="dec">0</value>
+    </parameter>
+    <parameter>
+      <id>INST_FIFO_DEPTH</id>
+      <value type="dec">4</value>
+    </parameter>
+    <parameter>
+      <id>INPUT_FIFO_DEPTH</id>
+      <value type="dec">0</value>
+    </parameter>
+    <parameter>
+      <id>OUTPUT_FIFO_DEPTH</id>
+      <value type="dec">0</value>
+    </parameter>
+    <parameter>
+      <id>SIZE_OF_MEMORYMAP</id>
+      <value type="hex">0x8000</value>
+    </parameter>
+    <parameter>
+      <id>BW_AXI_DATA</id>
+      <value type="dec">128</value>
+    </parameter>
+    <parameter>
+      <id>BW_AXI_TID</id>
+      <value type="dec">4</value>
+    </parameter>
+    <interface>
+      <name>control</name>
+      <library_name>mmiox1</library_name>
+      <role>receiver</role>
+      <comm_type>memory:all</comm_type>
+      <parameter>
+        <id>bw_config</id>
+        <value type="text">BW_CONFIG</value>
+      </parameter>
+      <parameter>
+        <id>bw_status</id>
+        <value type="text">BW_STATUS</value>
+      </parameter>
+      <parameter>
+        <id>bw_log</id>
+        <value type="text">BW_LOG</value>
+      </parameter>
+      <parameter>
+        <id>bw_inst</id>
+        <value type="text">BW_INST</value>
+      </parameter>
+      <parameter>
+        <id>bw_input</id>
+        <value type="text">BW_INPUT</value>
+      </parameter>
+      <parameter>
+        <id>bw_output</id>
+        <value type="text">BW_OUTPUT</value>
+      </parameter>
+      <parameter>
+        <id>config_default_value</id>
+        <value type="text">CONFIG_DEFAULT_VALUE</value>
+      </parameter>
+      <parameter>
+        <id>log_fifo_depth</id>
+        <value type="text">LOG_FIFO_DEPTH</value>
+      </parameter>
+      <parameter>
+        <id>inst_fifo_depth</id>
+        <value type="text">INST_FIFO_DEPTH</value>
+      </parameter>
+      <parameter>
+        <id>input_fifo_depth</id>
+        <value type="text">INPUT_FIFO_DEPTH</value>
+      </parameter>
+      <parameter>
+        <id>output_fifo_depth</id>
+        <value type="text">OUTPUT_FIFO_DEPTH</value>
+      </parameter>
+      <sync>clk</sync>
+      <init>rstnn</init>
+    </interface>
+  </ip_instance>
+</rvx>

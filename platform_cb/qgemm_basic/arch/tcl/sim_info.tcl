@@ -1,0 +1,17 @@
+# set ::SIMULATE_SPI
+# set ::SIMULATE_I2C
+# set ::SIMULATE_SPI_FLASH
+# set ::SIMULATE_SDRAM_BEHAVIOR
+# set ::SIMULATE_EXT_MRAM_BEHAVIOR
+# set ::SIMULATE_C2C_SELF
+set ::SIM_SMALL_RAM_SIZE 131072
+set ::SIM_LARGE_RAM_SIZE 2097152
+set ::RECORD_TOP "depth=20",i_platform.i_rtl.i_dca_matrix_qgemm
+set ::SRAM_IP_INSTANCE i_system_sram
+set ::SRAM_CELL_VARIABLE_INSIDE_MEMORY_IP i_cell.memory
+set ::SRAM_CELL_VARIABLE_WIDTH 32
+set ::NUM_SRAM_CELL 1
+set ::DRAM_IP_INSTANCE i_system_ddr
+set ::DRAM_WIDTH 32
+set ::EXTERNAL_CLK_NAME_00 external_clk_0
+

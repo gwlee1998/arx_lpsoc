@@ -13,7 +13,28 @@
 		<ip_instance>
 			<name>i_main_core</name>
 			<library_name>rvc_orca</library_name>
-    </ip_instance>
+		</ip_instance>
+		<ip_instance>
+			<name>i_userip1</name>
+			<library_name>user_slaveif_axi_clkin</library_name>
+			
+			<parameter>
+				<id>SIZE_OF_MEMORYMAP</id>
+				<value>32kB</value>
+			</parameter>
+			<parameter>
+				<id>BW_AXI_TID</id>
+				<value>4</value>
+			</parameter>
+			<parameter>
+				<id>BW_ADDR</id>
+				<value>32</value>
+			</parameter>
+			<parameter>
+				<id>BW_DATA</id>
+				<value>128</value>
+			</parameter>
+		</ip_instance>
 
 	</platform>
 </rvx>

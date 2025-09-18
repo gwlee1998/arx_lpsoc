@@ -1,0 +1,16 @@
+INCLUDES += -I${RVX_SSW_HOME}/memorymap
+INCLUDES += -I${PLATFORM_DIR}/arch/ssw/src
+C_SRC += $(wildcard ${PLATFORM_DIR}/arch/ssw/src/*.c)
+-include ${RVX_SSW_HOME}/core/orca/set_env.mh
+-include ${RVX_SSW_HOME}/system_utility/env/set_env.mh
+-include ${RVX_SSW_HOME}/utility/env/set_env.mh
+-include ${RVX_SSW_HOME}/uthash/env/set_env.mh
+-include ${RVX_SSW_HOME}/image/env/set_env.mh
+-include ${RVX_SSW_HOME}/matrix/env/set_env.mh
+-include ${RVX_SSW_HOME}/mmiox/env/set_env.mh
+-include ${RVX_SSW_HOME}/api/munoc/env/set_env.mh
+-include ${RVX_SSW_HOME}/api/platform_controller/env/set_env.mh
+-include ${RVX_SSW_HOME}/api/core_peri_group/env/set_env.mh
+-include ${RVX_SSW_HOME}/api/external_peri_group/env/set_env.mh
+INCLUDES += -I${PLATFORM_DIR}/util/generated/ssw
+C_SRC += $(wildcard ${PLATFORM_DIR}/util/generated/ssw/*.c)
