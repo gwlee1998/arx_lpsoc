@@ -188,15 +188,12 @@
 `define DCA_NEURGEMM_OPCODE_INDEX_OUTPUT_STRIDE 20
 `define DCA_NEURGEMM_OPCODE_NONE 0
 
-// reg dca_matrix_conv2d_inst
 `define BW_DCA_MATRIX_QDQ_INST 480
 `define DCA_MATRIX_QDQ_INST_DEFAULT_VALUE 0
 
-// reg dca_matrix_conv2d_log
 `define BW_DCA_MATRIX_QDQ_LOG 32
 `define DCA_MATRIX_QDQ_LOG_DEFAULT_VALUE 0
 
-// reg dca_matrix_conv2d_status
 `define BW_DCA_MATRIX_QDQ_STATUS 32
 `define DCA_MATRIX_QDQ_STATUS_DEFAULT_VALUE 0
 
