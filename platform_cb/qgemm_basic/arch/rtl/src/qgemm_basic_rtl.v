@@ -11,7 +11,7 @@
 // IN ANY FORM, BY ANY MEANS, IN WHOLE OR IN PART, WITHOUT THE
 // COMPLETE PRIOR WRITTEN PERMISSION OF ETRI.
 // ****************************************************************************
-// 2025-09-17
+// 2025-09-18
 // Kyuseung Han (han@etri.re.kr)
 // ****************************************************************************
 // ****************************************************************************
@@ -36,6 +36,7 @@ module QGEMM_BASIC_RTL
 	clk_dram_if,
 	clk_dram_sys,
 	clk_dram_ref,
+	clk_vta,
 	clk_noc,
 	gclk_system,
 	gclk_dca_core,
@@ -44,6 +45,7 @@ module QGEMM_BASIC_RTL
 	gclk_system_debug,
 	gclk_local_access,
 	gclk_process_000,
+	gclk_vta,
 	gclk_noc,
 	tick_1us,
 	tick_62d5ms,
@@ -152,6 +154,7 @@ output wire clk_process_000;
 output wire clk_dram_if;
 output wire clk_dram_sys;
 output wire clk_dram_ref;
+output wire clk_vta;
 output wire clk_noc;
 output wire gclk_system;
 output wire gclk_dca_core;
@@ -160,6 +163,7 @@ output wire gclk_system_external;
 output wire gclk_system_debug;
 output wire gclk_local_access;
 output wire gclk_process_000;
+output wire gclk_vta;
 output wire gclk_noc;
 output wire tick_1us;
 output wire tick_62d5ms;
@@ -169,8 +173,8 @@ output wire spi_common_sdq0;
 input wire external_rstnn;
 output wire global_rstnn;
 output wire global_rstpp;
-output wire [(6)-1:0] rstnn_seqeunce;
-output wire [(6)-1:0] rstpp_seqeunce;
+output wire [(7)-1:0] rstnn_seqeunce;
+output wire [(7)-1:0] rstpp_seqeunce;
 output wire rstnn_user;
 output wire rstpp_user;
 output wire [((1)*(1))-1:0] led_list;
@@ -451,6 +455,54 @@ wire i_led_tick_62d5ms;
 wire i_led_rstnn;
 wire i_led_app_finished;
 wire [((1)*(1))-1:0] i_led_led_list;
+wire i_vta00_clk;
+wire i_vta00_rstnn;
+wire i_vta00_data_sx4awready;
+wire i_vta00_data_sx4awvalid;
+wire [(32)-1:0] i_vta00_data_sx4awaddr;
+wire [(4)-1:0] i_vta00_data_sx4awid;
+wire [(8)-1:0] i_vta00_data_sx4awlen;
+wire [(3)-1:0] i_vta00_data_sx4awsize;
+wire [(2)-1:0] i_vta00_data_sx4awburst;
+wire i_vta00_data_sx4wready;
+wire i_vta00_data_sx4wvalid;
+wire [(64)-1:0] i_vta00_data_sx4wdata;
+wire [(64/8)-1:0] i_vta00_data_sx4wstrb;
+wire i_vta00_data_sx4wlast;
+wire i_vta00_data_sx4bready;
+wire i_vta00_data_sx4bvalid;
+wire [(4)-1:0] i_vta00_data_sx4bid;
+wire [(2)-1:0] i_vta00_data_sx4bresp;
+wire i_vta00_data_sx4arready;
+wire i_vta00_data_sx4arvalid;
+wire [(32)-1:0] i_vta00_data_sx4araddr;
+wire [(4)-1:0] i_vta00_data_sx4arid;
+wire [(8)-1:0] i_vta00_data_sx4arlen;
+wire [(3)-1:0] i_vta00_data_sx4arsize;
+wire [(2)-1:0] i_vta00_data_sx4arburst;
+wire i_vta00_data_sx4rready;
+wire i_vta00_data_sx4rvalid;
+wire [(4)-1:0] i_vta00_data_sx4rid;
+wire [(64)-1:0] i_vta00_data_sx4rdata;
+wire i_vta00_data_sx4rlast;
+wire [(2)-1:0] i_vta00_data_sx4rresp;
+wire i_vta00_config_rx4lawready;
+wire i_vta00_config_rx4lawvalid;
+wire [(32)-1:0] i_vta00_config_rx4lawaddr;
+wire i_vta00_config_rx4lwready;
+wire i_vta00_config_rx4lwvalid;
+wire [(32)-1:0] i_vta00_config_rx4lwdata;
+wire [(32/8)-1:0] i_vta00_config_rx4lwstrb;
+wire i_vta00_config_rx4lbready;
+wire i_vta00_config_rx4lbvalid;
+wire [(2)-1:0] i_vta00_config_rx4lbresp;
+wire i_vta00_config_rx4larready;
+wire i_vta00_config_rx4larvalid;
+wire [(32)-1:0] i_vta00_config_rx4laraddr;
+wire i_vta00_config_rx4lrready;
+wire i_vta00_config_rx4lrvalid;
+wire [(32)-1:0] i_vta00_config_rx4lrdata;
+wire [(2)-1:0] i_vta00_config_rx4lrresp;
 wire common_peri_group_clk;
 wire common_peri_group_rstnn;
 wire [(1)-1:0] common_peri_group_lock_status_list;
@@ -549,8 +601,8 @@ wire platform_controller_clk;
 wire platform_controller_external_rstnn;
 wire platform_controller_global_rstnn;
 wire platform_controller_global_rstpp;
-wire [(6)-1:0] platform_controller_rstnn_seqeunce;
-wire [(6)-1:0] platform_controller_rstpp_seqeunce;
+wire [(7)-1:0] platform_controller_rstnn_seqeunce;
+wire [(7)-1:0] platform_controller_rstpp_seqeunce;
 wire [(`BW_BOOT_MODE)-1:0] platform_controller_boot_mode;
 wire platform_controller_jtag_select;
 wire platform_controller_initialized;
@@ -1034,6 +1086,57 @@ wire [(32)-1:0] i_mnim_i_main_core_data_uc_local_spwdata;
 wire i_mnim_i_main_core_data_uc_local_spready;
 wire [(32)-1:0] i_mnim_i_main_core_data_uc_local_sprdata;
 wire i_mnim_i_main_core_data_uc_local_spslverr;
+wire i_mnim_i_vta00_data_clk_network;
+wire i_mnim_i_vta00_data_rstnn_network;
+wire i_mnim_i_vta00_data_clk_master;
+wire i_mnim_i_vta00_data_rstnn_master;
+wire i_mnim_i_vta00_data_comm_disable;
+wire i_mnim_i_vta00_data_local_allows_holds;
+wire i_mnim_i_vta00_data_rx4awready;
+wire i_mnim_i_vta00_data_rx4awvalid;
+wire [(32)-1:0] i_mnim_i_vta00_data_rx4awaddr;
+wire [(4)-1:0] i_mnim_i_vta00_data_rx4awid;
+wire [(8)-1:0] i_mnim_i_vta00_data_rx4awlen;
+wire [(3)-1:0] i_mnim_i_vta00_data_rx4awsize;
+wire [(2)-1:0] i_mnim_i_vta00_data_rx4awburst;
+wire i_mnim_i_vta00_data_rx4wready;
+wire i_mnim_i_vta00_data_rx4wvalid;
+wire [(64)-1:0] i_mnim_i_vta00_data_rx4wdata;
+wire [(64/8)-1:0] i_mnim_i_vta00_data_rx4wstrb;
+wire i_mnim_i_vta00_data_rx4wlast;
+wire i_mnim_i_vta00_data_rx4bready;
+wire i_mnim_i_vta00_data_rx4bvalid;
+wire [(4)-1:0] i_mnim_i_vta00_data_rx4bid;
+wire [(2)-1:0] i_mnim_i_vta00_data_rx4bresp;
+wire i_mnim_i_vta00_data_rx4arready;
+wire i_mnim_i_vta00_data_rx4arvalid;
+wire [(32)-1:0] i_mnim_i_vta00_data_rx4araddr;
+wire [(4)-1:0] i_mnim_i_vta00_data_rx4arid;
+wire [(8)-1:0] i_mnim_i_vta00_data_rx4arlen;
+wire [(3)-1:0] i_mnim_i_vta00_data_rx4arsize;
+wire [(2)-1:0] i_mnim_i_vta00_data_rx4arburst;
+wire i_mnim_i_vta00_data_rx4rready;
+wire i_mnim_i_vta00_data_rx4rvalid;
+wire [(4)-1:0] i_mnim_i_vta00_data_rx4rid;
+wire [(64)-1:0] i_mnim_i_vta00_data_rx4rdata;
+wire i_mnim_i_vta00_data_rx4rlast;
+wire [(2)-1:0] i_mnim_i_vta00_data_rx4rresp;
+wire [(`BW_FNI_LINK(BW_FNI_PHIT))-1:0] i_mnim_i_vta00_data_sfni_link;
+wire i_mnim_i_vta00_data_sfni_ready;
+wire [(`BW_BNI_LINK(BW_BNI_PHIT))-1:0] i_mnim_i_vta00_data_sbni_link;
+wire i_mnim_i_vta00_data_sbni_ready;
+wire [(`BW_SVRING_LINK)-1:0] i_mnim_i_vta00_data_svri_rlink;
+wire i_mnim_i_vta00_data_svri_rack;
+wire [(`BW_SVRING_LINK)-1:0] i_mnim_i_vta00_data_svri_slink;
+wire i_mnim_i_vta00_data_svri_sack;
+wire i_mnim_i_vta00_data_local_spsel;
+wire i_mnim_i_vta00_data_local_spenable;
+wire i_mnim_i_vta00_data_local_spwrite;
+wire [(32)-1:0] i_mnim_i_vta00_data_local_spaddr;
+wire [(64)-1:0] i_mnim_i_vta00_data_local_spwdata;
+wire i_mnim_i_vta00_data_local_spready;
+wire [(64)-1:0] i_mnim_i_vta00_data_local_sprdata;
+wire i_mnim_i_vta00_data_local_spslverr;
 wire i_mnim_platform_controller_master_clk_network;
 wire i_mnim_platform_controller_master_rstnn_network;
 wire i_mnim_platform_controller_master_clk_master;
@@ -1235,6 +1338,36 @@ wire [(`BW_SVRING_LINK)-1:0] i_snim_i_system_ddr_no_name_svri_rlink;
 wire i_snim_i_system_ddr_no_name_svri_rack;
 wire [(`BW_SVRING_LINK)-1:0] i_snim_i_system_ddr_no_name_svri_slink;
 wire i_snim_i_system_ddr_no_name_svri_sack;
+wire i_snim_i_vta00_config_clk_network;
+wire i_snim_i_vta00_config_rstnn_network;
+wire i_snim_i_vta00_config_clk_slave;
+wire i_snim_i_vta00_config_rstnn_slave;
+wire i_snim_i_vta00_config_comm_disable;
+wire i_snim_i_vta00_config_sx4lawready;
+wire i_snim_i_vta00_config_sx4lawvalid;
+wire [(32)-1:0] i_snim_i_vta00_config_sx4lawaddr;
+wire i_snim_i_vta00_config_sx4lwready;
+wire i_snim_i_vta00_config_sx4lwvalid;
+wire [(32)-1:0] i_snim_i_vta00_config_sx4lwdata;
+wire [(32/8)-1:0] i_snim_i_vta00_config_sx4lwstrb;
+wire i_snim_i_vta00_config_sx4lbready;
+wire i_snim_i_vta00_config_sx4lbvalid;
+wire [(2)-1:0] i_snim_i_vta00_config_sx4lbresp;
+wire i_snim_i_vta00_config_sx4larready;
+wire i_snim_i_vta00_config_sx4larvalid;
+wire [(32)-1:0] i_snim_i_vta00_config_sx4laraddr;
+wire i_snim_i_vta00_config_sx4lrready;
+wire i_snim_i_vta00_config_sx4lrvalid;
+wire [(32)-1:0] i_snim_i_vta00_config_sx4lrdata;
+wire [(2)-1:0] i_snim_i_vta00_config_sx4lrresp;
+wire [(`BW_FNI_LINK(BW_FNI_PHIT))-1:0] i_snim_i_vta00_config_rfni_link;
+wire i_snim_i_vta00_config_rfni_ready;
+wire [(`BW_BNI_LINK(BW_BNI_PHIT))-1:0] i_snim_i_vta00_config_rbni_link;
+wire i_snim_i_vta00_config_rbni_ready;
+wire [(`BW_SVRING_LINK)-1:0] i_snim_i_vta00_config_svri_rlink;
+wire i_snim_i_vta00_config_svri_rack;
+wire [(`BW_SVRING_LINK)-1:0] i_snim_i_vta00_config_svri_slink;
+wire i_snim_i_vta00_config_svri_sack;
 wire i_system_router_clk;
 wire i_system_router_rstnn;
 wire [((`BW_FNI_LINK(BW_FNI_PHIT))*(1))-1:0] i_system_router_rfni_link_list;
@@ -1247,14 +1380,14 @@ wire [((`BW_BNI_LINK(BW_BNI_PHIT))*(6))-1:0] i_system_router_sbni_link_list;
 wire [((1)*(6))-1:0] i_system_router_sbni_ready_list;
 wire i_user_router_clk;
 wire i_user_router_rstnn;
-wire [((`BW_FNI_LINK(BW_FNI_PHIT))*(7))-1:0] i_user_router_rfni_link_list;
-wire [((1)*(7))-1:0] i_user_router_rfni_ready_list;
-wire [((`BW_BNI_LINK(BW_BNI_PHIT))*(7))-1:0] i_user_router_rbni_link_list;
-wire [((1)*(7))-1:0] i_user_router_rbni_ready_list;
-wire [((`BW_FNI_LINK(BW_FNI_PHIT))*(3))-1:0] i_user_router_sfni_link_list;
-wire [((1)*(3))-1:0] i_user_router_sfni_ready_list;
-wire [((`BW_BNI_LINK(BW_BNI_PHIT))*(3))-1:0] i_user_router_sbni_link_list;
-wire [((1)*(3))-1:0] i_user_router_sbni_ready_list;
+wire [((`BW_FNI_LINK(BW_FNI_PHIT))*(8))-1:0] i_user_router_rfni_link_list;
+wire [((1)*(8))-1:0] i_user_router_rfni_ready_list;
+wire [((`BW_BNI_LINK(BW_BNI_PHIT))*(8))-1:0] i_user_router_rbni_link_list;
+wire [((1)*(8))-1:0] i_user_router_rbni_ready_list;
+wire [((`BW_FNI_LINK(BW_FNI_PHIT))*(4))-1:0] i_user_router_sfni_link_list;
+wire [((1)*(4))-1:0] i_user_router_sfni_ready_list;
+wire [((`BW_BNI_LINK(BW_BNI_PHIT))*(4))-1:0] i_user_router_sbni_link_list;
+wire [((1)*(4))-1:0] i_user_router_sbni_ready_list;
 
 RVC_ORCA_PLUS
 #(
@@ -1481,6 +1614,59 @@ i_led
 	.led_list(i_led_led_list)
 );
 
+ERVP_VTA
+i_vta00
+(
+	.clk(i_vta00_clk),
+	.rstnn(i_vta00_rstnn),
+	.data_sx4awready(i_vta00_data_sx4awready),
+	.data_sx4awvalid(i_vta00_data_sx4awvalid),
+	.data_sx4awaddr(i_vta00_data_sx4awaddr),
+	.data_sx4awid(i_vta00_data_sx4awid),
+	.data_sx4awlen(i_vta00_data_sx4awlen),
+	.data_sx4awsize(i_vta00_data_sx4awsize),
+	.data_sx4awburst(i_vta00_data_sx4awburst),
+	.data_sx4wready(i_vta00_data_sx4wready),
+	.data_sx4wvalid(i_vta00_data_sx4wvalid),
+	.data_sx4wdata(i_vta00_data_sx4wdata),
+	.data_sx4wstrb(i_vta00_data_sx4wstrb),
+	.data_sx4wlast(i_vta00_data_sx4wlast),
+	.data_sx4bready(i_vta00_data_sx4bready),
+	.data_sx4bvalid(i_vta00_data_sx4bvalid),
+	.data_sx4bid(i_vta00_data_sx4bid),
+	.data_sx4bresp(i_vta00_data_sx4bresp),
+	.data_sx4arready(i_vta00_data_sx4arready),
+	.data_sx4arvalid(i_vta00_data_sx4arvalid),
+	.data_sx4araddr(i_vta00_data_sx4araddr),
+	.data_sx4arid(i_vta00_data_sx4arid),
+	.data_sx4arlen(i_vta00_data_sx4arlen),
+	.data_sx4arsize(i_vta00_data_sx4arsize),
+	.data_sx4arburst(i_vta00_data_sx4arburst),
+	.data_sx4rready(i_vta00_data_sx4rready),
+	.data_sx4rvalid(i_vta00_data_sx4rvalid),
+	.data_sx4rid(i_vta00_data_sx4rid),
+	.data_sx4rdata(i_vta00_data_sx4rdata),
+	.data_sx4rlast(i_vta00_data_sx4rlast),
+	.data_sx4rresp(i_vta00_data_sx4rresp),
+	.config_rx4lawready(i_vta00_config_rx4lawready),
+	.config_rx4lawvalid(i_vta00_config_rx4lawvalid),
+	.config_rx4lawaddr(i_vta00_config_rx4lawaddr),
+	.config_rx4lwready(i_vta00_config_rx4lwready),
+	.config_rx4lwvalid(i_vta00_config_rx4lwvalid),
+	.config_rx4lwdata(i_vta00_config_rx4lwdata),
+	.config_rx4lwstrb(i_vta00_config_rx4lwstrb),
+	.config_rx4lbready(i_vta00_config_rx4lbready),
+	.config_rx4lbvalid(i_vta00_config_rx4lbvalid),
+	.config_rx4lbresp(i_vta00_config_rx4lbresp),
+	.config_rx4larready(i_vta00_config_rx4larready),
+	.config_rx4larvalid(i_vta00_config_rx4larvalid),
+	.config_rx4laraddr(i_vta00_config_rx4laraddr),
+	.config_rx4lrready(i_vta00_config_rx4lrready),
+	.config_rx4lrvalid(i_vta00_config_rx4lrvalid),
+	.config_rx4lrdata(i_vta00_config_rx4lrdata),
+	.config_rx4lrresp(i_vta00_config_rx4lrresp)
+);
+
 ERVP_COMMON_PERI_GROUP
 #(
 	.BW_ADDR(32),
@@ -1626,7 +1812,7 @@ core_peri_group
 ERVP_PLATFORM_CONTROLLER
 #(
 	.BW_ADDR(32),
-	.NUM_RESET(6),
+	.NUM_RESET(7),
 	.NUM_AUTO_RESET(4),
 	.NUM_CORE(1)
 )
@@ -2301,6 +2487,71 @@ i_mnim_i_main_core_data_uc
 	.local_spslverr(i_mnim_i_main_core_data_uc_local_spslverr)
 );
 
+MUNOC_AXI4_MASTER_NETWORK_INTERFACE_MODULE_ASYNCH
+#(
+	.NODE_ID(`NODE_ID_I_MNIM_I_VTA00_DATA),
+	.BW_FNI_PHIT(BW_FNI_PHIT),
+	.BW_BNI_PHIT(BW_BNI_PHIT),
+	.BW_PLATFORM_ADDR(32),
+	.BW_NODE_DATA(64),
+	.NAME("i_vta00_data"),
+	.BW_AXI_MASTER_TID(4)
+)
+i_mnim_i_vta00_data
+(
+	.clk_network(i_mnim_i_vta00_data_clk_network),
+	.rstnn_network(i_mnim_i_vta00_data_rstnn_network),
+	.clk_master(i_mnim_i_vta00_data_clk_master),
+	.rstnn_master(i_mnim_i_vta00_data_rstnn_master),
+	.comm_disable(i_mnim_i_vta00_data_comm_disable),
+	.local_allows_holds(i_mnim_i_vta00_data_local_allows_holds),
+	.rx4awready(i_mnim_i_vta00_data_rx4awready),
+	.rx4awvalid(i_mnim_i_vta00_data_rx4awvalid),
+	.rx4awaddr(i_mnim_i_vta00_data_rx4awaddr),
+	.rx4awid(i_mnim_i_vta00_data_rx4awid),
+	.rx4awlen(i_mnim_i_vta00_data_rx4awlen),
+	.rx4awsize(i_mnim_i_vta00_data_rx4awsize),
+	.rx4awburst(i_mnim_i_vta00_data_rx4awburst),
+	.rx4wready(i_mnim_i_vta00_data_rx4wready),
+	.rx4wvalid(i_mnim_i_vta00_data_rx4wvalid),
+	.rx4wdata(i_mnim_i_vta00_data_rx4wdata),
+	.rx4wstrb(i_mnim_i_vta00_data_rx4wstrb),
+	.rx4wlast(i_mnim_i_vta00_data_rx4wlast),
+	.rx4bready(i_mnim_i_vta00_data_rx4bready),
+	.rx4bvalid(i_mnim_i_vta00_data_rx4bvalid),
+	.rx4bid(i_mnim_i_vta00_data_rx4bid),
+	.rx4bresp(i_mnim_i_vta00_data_rx4bresp),
+	.rx4arready(i_mnim_i_vta00_data_rx4arready),
+	.rx4arvalid(i_mnim_i_vta00_data_rx4arvalid),
+	.rx4araddr(i_mnim_i_vta00_data_rx4araddr),
+	.rx4arid(i_mnim_i_vta00_data_rx4arid),
+	.rx4arlen(i_mnim_i_vta00_data_rx4arlen),
+	.rx4arsize(i_mnim_i_vta00_data_rx4arsize),
+	.rx4arburst(i_mnim_i_vta00_data_rx4arburst),
+	.rx4rready(i_mnim_i_vta00_data_rx4rready),
+	.rx4rvalid(i_mnim_i_vta00_data_rx4rvalid),
+	.rx4rid(i_mnim_i_vta00_data_rx4rid),
+	.rx4rdata(i_mnim_i_vta00_data_rx4rdata),
+	.rx4rlast(i_mnim_i_vta00_data_rx4rlast),
+	.rx4rresp(i_mnim_i_vta00_data_rx4rresp),
+	.sfni_link(i_mnim_i_vta00_data_sfni_link),
+	.sfni_ready(i_mnim_i_vta00_data_sfni_ready),
+	.sbni_link(i_mnim_i_vta00_data_sbni_link),
+	.sbni_ready(i_mnim_i_vta00_data_sbni_ready),
+	.svri_rlink(i_mnim_i_vta00_data_svri_rlink),
+	.svri_rack(i_mnim_i_vta00_data_svri_rack),
+	.svri_slink(i_mnim_i_vta00_data_svri_slink),
+	.svri_sack(i_mnim_i_vta00_data_svri_sack),
+	.local_spsel(i_mnim_i_vta00_data_local_spsel),
+	.local_spenable(i_mnim_i_vta00_data_local_spenable),
+	.local_spwrite(i_mnim_i_vta00_data_local_spwrite),
+	.local_spaddr(i_mnim_i_vta00_data_local_spaddr),
+	.local_spwdata(i_mnim_i_vta00_data_local_spwdata),
+	.local_spready(i_mnim_i_vta00_data_local_spready),
+	.local_sprdata(i_mnim_i_vta00_data_local_sprdata),
+	.local_spslverr(i_mnim_i_vta00_data_local_spslverr)
+);
+
 MUNOC_AHB_MASTER_NETWORK_INTERFACE_MODULE_ASYNCH
 #(
 	.NODE_ID(`NODE_ID_I_MNIM_PLATFORM_CONTROLLER_MASTER),
@@ -2588,6 +2839,49 @@ i_snim_i_system_ddr_no_name
 	.svri_sack(i_snim_i_system_ddr_no_name_svri_sack)
 );
 
+MUNOC_AXI4L_SLAVE_NETWORK_INTERFACE_MODULE_ASYNCH
+#(
+	.NODE_ID(`NODE_ID_I_SNIM_I_VTA00_CONFIG),
+	.BW_FNI_PHIT(BW_FNI_PHIT),
+	.BW_BNI_PHIT(BW_BNI_PHIT),
+	.BW_PLATFORM_ADDR(32),
+	.BW_NODE_DATA(32),
+	.NAME("i_vta00_config")
+)
+i_snim_i_vta00_config
+(
+	.clk_network(i_snim_i_vta00_config_clk_network),
+	.rstnn_network(i_snim_i_vta00_config_rstnn_network),
+	.clk_slave(i_snim_i_vta00_config_clk_slave),
+	.rstnn_slave(i_snim_i_vta00_config_rstnn_slave),
+	.comm_disable(i_snim_i_vta00_config_comm_disable),
+	.sx4lawready(i_snim_i_vta00_config_sx4lawready),
+	.sx4lawvalid(i_snim_i_vta00_config_sx4lawvalid),
+	.sx4lawaddr(i_snim_i_vta00_config_sx4lawaddr),
+	.sx4lwready(i_snim_i_vta00_config_sx4lwready),
+	.sx4lwvalid(i_snim_i_vta00_config_sx4lwvalid),
+	.sx4lwdata(i_snim_i_vta00_config_sx4lwdata),
+	.sx4lwstrb(i_snim_i_vta00_config_sx4lwstrb),
+	.sx4lbready(i_snim_i_vta00_config_sx4lbready),
+	.sx4lbvalid(i_snim_i_vta00_config_sx4lbvalid),
+	.sx4lbresp(i_snim_i_vta00_config_sx4lbresp),
+	.sx4larready(i_snim_i_vta00_config_sx4larready),
+	.sx4larvalid(i_snim_i_vta00_config_sx4larvalid),
+	.sx4laraddr(i_snim_i_vta00_config_sx4laraddr),
+	.sx4lrready(i_snim_i_vta00_config_sx4lrready),
+	.sx4lrvalid(i_snim_i_vta00_config_sx4lrvalid),
+	.sx4lrdata(i_snim_i_vta00_config_sx4lrdata),
+	.sx4lrresp(i_snim_i_vta00_config_sx4lrresp),
+	.rfni_link(i_snim_i_vta00_config_rfni_link),
+	.rfni_ready(i_snim_i_vta00_config_rfni_ready),
+	.rbni_link(i_snim_i_vta00_config_rbni_link),
+	.rbni_ready(i_snim_i_vta00_config_rbni_ready),
+	.svri_rlink(i_snim_i_vta00_config_svri_rlink),
+	.svri_rack(i_snim_i_vta00_config_svri_rack),
+	.svri_slink(i_snim_i_vta00_config_svri_slink),
+	.svri_sack(i_snim_i_vta00_config_svri_sack)
+);
+
 MUNOC_NETWORK_DUAL_ROUTER
 #(
 	.BW_FNI_PHIT(BW_FNI_PHIT),
@@ -2614,8 +2908,8 @@ MUNOC_NETWORK_DUAL_ROUTER
 #(
 	.BW_FNI_PHIT(BW_FNI_PHIT),
 	.BW_BNI_PHIT(BW_BNI_PHIT),
-	.NUM_MASTER(7),
-	.NUM_SLAVE(3),
+	.NUM_MASTER(8),
+	.NUM_SLAVE(4),
 	.ROUTER_ID(`ROUTER_ID_I_USER_ROUTER)
 )
 i_user_router
@@ -2638,6 +2932,7 @@ assign clk_system_external = clk_system;
 assign clk_system_debug = clk_system;
 assign clk_local_access = clk_core;
 assign clk_process_000 = clk_core;
+assign clk_vta = clk_core;
 assign clk_noc = clk_dram_if;
 assign gclk_system = clk_system;
 assign gclk_dca_core = clk_dca_core;
@@ -2646,6 +2941,7 @@ assign gclk_system_external = clk_system_external;
 assign gclk_system_debug = clk_system_debug;
 assign gclk_local_access = clk_local_access;
 assign gclk_process_000 = clk_process_000;
+assign gclk_vta = clk_vta;
 assign gclk_noc = clk_noc;
 assign tick_1us = autoname_103_tick_1us;
 assign tick_62d5ms = autoname_103_tick_62d5ms;
@@ -2679,6 +2975,7 @@ assign default_slave_rstnn_debug = rstnn_seqeunce[3];
 assign i_dca_matrix_qgemm_rstnn = rstnn_seqeunce[4];
 assign i_dca_matrix_qgemm_control_mmiox1_interface_rstnn_mmio = rstnn_seqeunce[4];
 assign i_main_core_rstnn = rstnn_seqeunce[5];
+assign i_vta00_rstnn = rstnn_seqeunce[6];
 assign rstnn_user = rstnn_seqeunce[3];
 assign rstpp_user = rstpp_seqeunce[3];
 assign i_dca_matrix_qgemm_clk = clk_dca_core;
@@ -2689,6 +2986,7 @@ assign i_system_ddr_clk_ref = clk_dram_ref;
 assign clk_dram_sys = i_pll0_clk_dram_sys;
 assign i_system_ddr_clk_sys = clk_dram_sys;
 assign clk_dram_if = i_system_ddr_clk_dram_if;
+assign i_vta00_clk = gclk_vta;
 assign clk_system = i_pll0_clk_system;
 assign common_peri_group_clk = clk_system;
 assign autoname_103_clk = clk_system;
@@ -2737,6 +3035,10 @@ assign i_mnim_i_main_core_data_uc_clk_network = gclk_noc;
 assign i_mnim_i_main_core_data_uc_rstnn_network = rstnn_noc;
 assign i_mnim_i_main_core_data_uc_clk_master = gclk_process_000;
 assign i_mnim_i_main_core_data_uc_rstnn_master = rstnn_seqeunce[5];
+assign i_mnim_i_vta00_data_clk_network = gclk_noc;
+assign i_mnim_i_vta00_data_rstnn_network = rstnn_noc;
+assign i_mnim_i_vta00_data_clk_master = gclk_vta;
+assign i_mnim_i_vta00_data_rstnn_master = rstnn_seqeunce[6];
 assign i_mnim_platform_controller_master_clk_network = gclk_noc;
 assign i_mnim_platform_controller_master_rstnn_network = rstnn_noc;
 assign i_mnim_platform_controller_master_clk_master = clk_system;
@@ -2759,6 +3061,10 @@ assign i_snim_i_dca_matrix_qgemm_mq2vta_clk_slave = clk_dca_core;
 assign i_snim_i_dca_matrix_qgemm_mq2vta_rstnn_slave = rstnn_seqeunce[4];
 assign i_snim_i_system_ddr_no_name_clk = gclk_noc;
 assign i_snim_i_system_ddr_no_name_rstnn = rstnn_noc;
+assign i_snim_i_vta00_config_clk_network = gclk_noc;
+assign i_snim_i_vta00_config_rstnn_network = rstnn_noc;
+assign i_snim_i_vta00_config_clk_slave = gclk_vta;
+assign i_snim_i_vta00_config_rstnn_slave = rstnn_seqeunce[6];
 assign i_led_tick_62d5ms = autoname_103_tick_62d5ms;
 assign i_led_app_finished = platform_controller_app_finished;
 assign i_system_ddr_rstnn_sys = platform_controller_global_rstnn;
@@ -2782,12 +3088,14 @@ assign i_snim_platform_controller_no_name_comm_disable = 0;
 assign i_snim_i_dca_matrix_qgemm_control_mmiox1_interface_mmio_comm_disable = 0;
 assign i_mnim_platform_controller_master_comm_disable = 0;
 assign i_snim_i_dca_matrix_qgemm_mq2vta_comm_disable = 0;
+assign i_snim_i_vta00_config_comm_disable = 0;
 assign core_peri_group_plic_interrupt = 0;
 assign platform_controller_boot_mode = 0;
 assign i_snim_i_system_sram_no_name_comm_disable = 0;
 assign i_mnim_i_main_core_inst_comm_disable = 0;
 assign i_mnim_i_main_core_data_c_comm_disable = 0;
 assign i_mnim_i_main_core_data_uc_comm_disable = 0;
+assign i_mnim_i_vta00_data_comm_disable = 0;
 assign i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_comm_disable = 0;
 assign i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_comm_disable = 0;
 assign i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_comm_disable = 0;
@@ -3004,6 +3312,35 @@ assign i_main_core_data_uc_sxrid = i_mnim_i_main_core_data_uc_rxrid;
 assign i_main_core_data_uc_sxrdata = i_mnim_i_main_core_data_uc_rxrdata;
 assign i_main_core_data_uc_sxrlast = i_mnim_i_main_core_data_uc_rxrlast;
 assign i_main_core_data_uc_sxrresp = i_mnim_i_main_core_data_uc_rxrresp;
+assign i_vta00_data_sx4awready = i_mnim_i_vta00_data_rx4awready;
+assign i_mnim_i_vta00_data_rx4awvalid = i_vta00_data_sx4awvalid;
+assign i_mnim_i_vta00_data_rx4awaddr = i_vta00_data_sx4awaddr;
+assign i_mnim_i_vta00_data_rx4awid = i_vta00_data_sx4awid;
+assign i_mnim_i_vta00_data_rx4awlen = i_vta00_data_sx4awlen;
+assign i_mnim_i_vta00_data_rx4awsize = i_vta00_data_sx4awsize;
+assign i_mnim_i_vta00_data_rx4awburst = i_vta00_data_sx4awburst;
+assign i_vta00_data_sx4wready = i_mnim_i_vta00_data_rx4wready;
+assign i_mnim_i_vta00_data_rx4wvalid = i_vta00_data_sx4wvalid;
+assign i_mnim_i_vta00_data_rx4wdata = i_vta00_data_sx4wdata;
+assign i_mnim_i_vta00_data_rx4wstrb = i_vta00_data_sx4wstrb;
+assign i_mnim_i_vta00_data_rx4wlast = i_vta00_data_sx4wlast;
+assign i_mnim_i_vta00_data_rx4bready = i_vta00_data_sx4bready;
+assign i_vta00_data_sx4bvalid = i_mnim_i_vta00_data_rx4bvalid;
+assign i_vta00_data_sx4bid = i_mnim_i_vta00_data_rx4bid;
+assign i_vta00_data_sx4bresp = i_mnim_i_vta00_data_rx4bresp;
+assign i_vta00_data_sx4arready = i_mnim_i_vta00_data_rx4arready;
+assign i_mnim_i_vta00_data_rx4arvalid = i_vta00_data_sx4arvalid;
+assign i_mnim_i_vta00_data_rx4araddr = i_vta00_data_sx4araddr;
+assign i_mnim_i_vta00_data_rx4arid = i_vta00_data_sx4arid;
+assign i_mnim_i_vta00_data_rx4arlen = i_vta00_data_sx4arlen;
+assign i_mnim_i_vta00_data_rx4arsize = i_vta00_data_sx4arsize;
+assign i_mnim_i_vta00_data_rx4arburst = i_vta00_data_sx4arburst;
+assign i_mnim_i_vta00_data_rx4rready = i_vta00_data_sx4rready;
+assign i_vta00_data_sx4rvalid = i_mnim_i_vta00_data_rx4rvalid;
+assign i_vta00_data_sx4rid = i_mnim_i_vta00_data_rx4rid;
+assign i_vta00_data_sx4rdata = i_mnim_i_vta00_data_rx4rdata;
+assign i_vta00_data_sx4rlast = i_mnim_i_vta00_data_rx4rlast;
+assign i_vta00_data_sx4rresp = i_mnim_i_vta00_data_rx4rresp;
 assign platform_controller_shready = i_mnim_platform_controller_master_rhready;
 assign i_mnim_platform_controller_master_rhaddr = platform_controller_shaddr;
 assign i_mnim_platform_controller_master_rhburst = platform_controller_shburst;
@@ -3129,6 +3466,23 @@ assign i_snim_i_system_ddr_no_name_sxrid = i_system_ddr_sxrid;
 assign i_snim_i_system_ddr_no_name_sxrdata = i_system_ddr_sxrdata;
 assign i_snim_i_system_ddr_no_name_sxrlast = i_system_ddr_sxrlast;
 assign i_snim_i_system_ddr_no_name_sxrresp = i_system_ddr_sxrresp;
+assign i_snim_i_vta00_config_sx4lawready = i_vta00_config_rx4lawready;
+assign i_vta00_config_rx4lawvalid = i_snim_i_vta00_config_sx4lawvalid;
+assign i_vta00_config_rx4lawaddr = i_snim_i_vta00_config_sx4lawaddr;
+assign i_snim_i_vta00_config_sx4lwready = i_vta00_config_rx4lwready;
+assign i_vta00_config_rx4lwvalid = i_snim_i_vta00_config_sx4lwvalid;
+assign i_vta00_config_rx4lwdata = i_snim_i_vta00_config_sx4lwdata;
+assign i_vta00_config_rx4lwstrb = i_snim_i_vta00_config_sx4lwstrb;
+assign i_vta00_config_rx4lbready = i_snim_i_vta00_config_sx4lbready;
+assign i_snim_i_vta00_config_sx4lbvalid = i_vta00_config_rx4lbvalid;
+assign i_snim_i_vta00_config_sx4lbresp = i_vta00_config_rx4lbresp;
+assign i_snim_i_vta00_config_sx4larready = i_vta00_config_rx4larready;
+assign i_vta00_config_rx4larvalid = i_snim_i_vta00_config_sx4larvalid;
+assign i_vta00_config_rx4laraddr = i_snim_i_vta00_config_sx4laraddr;
+assign i_vta00_config_rx4lrready = i_snim_i_vta00_config_sx4lrready;
+assign i_snim_i_vta00_config_sx4lrvalid = i_vta00_config_rx4lrvalid;
+assign i_snim_i_vta00_config_sx4lrdata = i_vta00_config_rx4lrdata;
+assign i_snim_i_vta00_config_sx4lrresp = i_vta00_config_rx4lrresp;
 assign i_system_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(0+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_inter_router_fifo00_sfni_link;
 assign i_inter_router_fifo00_sfni_ready = i_system_router_rfni_ready_list[1*(0+1)-1 -:1];
 assign i_inter_router_fifo00_sbni_link = i_system_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(0+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
@@ -3169,22 +3523,26 @@ assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(2+1)-1 -:`BW_FNI_
 assign i_mnim_i_main_core_data_uc_sfni_ready = i_user_router_rfni_ready_list[1*(2+1)-1 -:1];
 assign i_mnim_i_main_core_data_uc_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(2+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
 assign i_user_router_rbni_ready_list[1*(2+1)-1 -:1] = i_mnim_i_main_core_data_uc_sbni_ready;
-assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(3+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_platform_controller_master_sfni_link;
-assign i_mnim_platform_controller_master_sfni_ready = i_user_router_rfni_ready_list[1*(3+1)-1 -:1];
-assign i_mnim_platform_controller_master_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(3+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
-assign i_user_router_rbni_ready_list[1*(3+1)-1 -:1] = i_mnim_platform_controller_master_sbni_ready;
-assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(4+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_link;
-assign i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_ready = i_user_router_rfni_ready_list[1*(4+1)-1 -:1];
-assign i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(4+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
-assign i_user_router_rbni_ready_list[1*(4+1)-1 -:1] = i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_ready;
-assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(5+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_link;
-assign i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_ready = i_user_router_rfni_ready_list[1*(5+1)-1 -:1];
-assign i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(5+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
-assign i_user_router_rbni_ready_list[1*(5+1)-1 -:1] = i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_ready;
-assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(6+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_link;
-assign i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_ready = i_user_router_rfni_ready_list[1*(6+1)-1 -:1];
-assign i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(6+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
-assign i_user_router_rbni_ready_list[1*(6+1)-1 -:1] = i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sbni_ready;
+assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(3+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_vta00_data_sfni_link;
+assign i_mnim_i_vta00_data_sfni_ready = i_user_router_rfni_ready_list[1*(3+1)-1 -:1];
+assign i_mnim_i_vta00_data_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(3+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
+assign i_user_router_rbni_ready_list[1*(3+1)-1 -:1] = i_mnim_i_vta00_data_sbni_ready;
+assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(4+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_platform_controller_master_sfni_link;
+assign i_mnim_platform_controller_master_sfni_ready = i_user_router_rfni_ready_list[1*(4+1)-1 -:1];
+assign i_mnim_platform_controller_master_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(4+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
+assign i_user_router_rbni_ready_list[1*(4+1)-1 -:1] = i_mnim_platform_controller_master_sbni_ready;
+assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(5+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_link;
+assign i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_ready = i_user_router_rfni_ready_list[1*(5+1)-1 -:1];
+assign i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(5+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
+assign i_user_router_rbni_ready_list[1*(5+1)-1 -:1] = i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_ready;
+assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(6+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_link;
+assign i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_ready = i_user_router_rfni_ready_list[1*(6+1)-1 -:1];
+assign i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(6+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
+assign i_user_router_rbni_ready_list[1*(6+1)-1 -:1] = i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_ready;
+assign i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(7+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)] = i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_link;
+assign i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_ready = i_user_router_rfni_ready_list[1*(7+1)-1 -:1];
+assign i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sbni_link = i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(7+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)];
+assign i_user_router_rbni_ready_list[1*(7+1)-1 -:1] = i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sbni_ready;
 assign i_snim_i_dca_matrix_qgemm_mq2vta_rfni_link = i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(0+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)];
 assign i_user_router_sfni_ready_list[1*(0+1)-1 -:1] = i_snim_i_dca_matrix_qgemm_mq2vta_rfni_ready;
 assign i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(0+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)] = i_snim_i_dca_matrix_qgemm_mq2vta_rbni_link;
@@ -3193,10 +3551,14 @@ assign i_snim_i_system_ddr_no_name_rfni_link = i_user_router_sfni_link_list[`BW_
 assign i_user_router_sfni_ready_list[1*(1+1)-1 -:1] = i_snim_i_system_ddr_no_name_rfni_ready;
 assign i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(1+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)] = i_snim_i_system_ddr_no_name_rbni_link;
 assign i_snim_i_system_ddr_no_name_rbni_ready = i_user_router_sbni_ready_list[1*(1+1)-1 -:1];
-assign i_inter_router_fifo00_rfni_link = i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(2+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)];
-assign i_user_router_sfni_ready_list[1*(2+1)-1 -:1] = i_inter_router_fifo00_rfni_ready;
-assign i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(2+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)] = i_inter_router_fifo00_rbni_link;
-assign i_inter_router_fifo00_rbni_ready = i_user_router_sbni_ready_list[1*(2+1)-1 -:1];
+assign i_snim_i_vta00_config_rfni_link = i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(2+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)];
+assign i_user_router_sfni_ready_list[1*(2+1)-1 -:1] = i_snim_i_vta00_config_rfni_ready;
+assign i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(2+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)] = i_snim_i_vta00_config_rbni_link;
+assign i_snim_i_vta00_config_rbni_ready = i_user_router_sbni_ready_list[1*(2+1)-1 -:1];
+assign i_inter_router_fifo00_rfni_link = i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(3+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)];
+assign i_user_router_sfni_ready_list[1*(3+1)-1 -:1] = i_inter_router_fifo00_rfni_ready;
+assign i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(3+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)] = i_inter_router_fifo00_rbni_link;
+assign i_inter_router_fifo00_rbni_ready = i_user_router_sbni_ready_list[1*(3+1)-1 -:1];
 assign platform_controller_rpc_list[32*(0+1)-1 -:32] = i_main_core_spc;
 assign platform_controller_rinst_list[32*(0+1)-1 -:32] = i_main_core_sinst;
 assign default_slave_debug_rpsel = platform_controller_noc_debug_spsel;
@@ -3231,6 +3593,9 @@ assign i_mnim_i_main_core_inst_local_spslverr = 0;
 assign i_mnim_i_main_core_data_c_local_spready = 0;
 assign i_mnim_i_main_core_data_c_local_sprdata = 0;
 assign i_mnim_i_main_core_data_c_local_spslverr = 0;
+assign i_mnim_i_vta00_data_local_spready = 0;
+assign i_mnim_i_vta00_data_local_sprdata = 0;
+assign i_mnim_i_vta00_data_local_spslverr = 0;
 assign default_slave_svri_rlink = 0;
 assign default_slave_svri_sack = 0;
 assign i_snim_i_system_sram_no_name_svri_rlink = 0;
@@ -3249,6 +3614,8 @@ assign i_mnim_i_main_core_data_c_svri_rlink = 0;
 assign i_mnim_i_main_core_data_c_svri_sack = 0;
 assign i_mnim_i_main_core_data_uc_svri_rlink = 0;
 assign i_mnim_i_main_core_data_uc_svri_sack = 0;
+assign i_mnim_i_vta00_data_svri_rlink = 0;
+assign i_mnim_i_vta00_data_svri_sack = 0;
 assign i_mnim_platform_controller_master_svri_rlink = 0;
 assign i_mnim_platform_controller_master_svri_sack = 0;
 assign i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_svri_rlink = 0;
@@ -3261,6 +3628,8 @@ assign i_snim_i_dca_matrix_qgemm_mq2vta_svri_rlink = 0;
 assign i_snim_i_dca_matrix_qgemm_mq2vta_svri_sack = 0;
 assign i_snim_i_system_ddr_no_name_svri_rlink = 0;
 assign i_snim_i_system_ddr_no_name_svri_sack = 0;
+assign i_snim_i_vta00_config_svri_rlink = 0;
+assign i_snim_i_vta00_config_svri_sack = 0;
 assign core_peri_group_tcu_spready = 0;
 assign core_peri_group_tcu_sprdata = 0;
 assign core_peri_group_tcu_spslverr = 0;

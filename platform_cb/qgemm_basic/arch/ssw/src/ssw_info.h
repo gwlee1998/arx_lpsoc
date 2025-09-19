@@ -72,7 +72,7 @@
 //#define USE_DMA
 //#define USE_FLORIAN
 //#define USE_TRAFFIC_GENERATOR
-//#define USE_VTA
+#define USE_VTA
 //#define USE_LCD_SHIELD
 //#define USE_GPIO_PINMUX
 //#define USE_USER_DDR4

@@ -21,6 +21,10 @@
         <value type="dec">1</value>
       </define>
       <define>
+        <name>num_vta</name>
+        <value type="dec">1</value>
+      </define>
+      <define>
         <name>include_slow_dram</name>
         <value type="bool">True</value>
       </define>
@@ -51,6 +55,10 @@
       <define>
         <name>sram_port_width</name>
         <value type="dec">32</value>
+      </define>
+      <define>
+        <name>include_vta</name>
+        <value type="bool">True</value>
       </define>
       <define>
         <name>include_core_peri_group</name>
@@ -121,6 +129,10 @@
     <ip_instance>
       <library_name>slow_dram</library_name>
       <name>i_system_ddr</name>
+    </ip_instance>
+    <ip_instance>
+      <name>i_vta00</name>
+      <library_name>vta</library_name>
     </ip_instance>
     <ip_instance>
       <name>i_pll0</name>
@@ -230,7 +242,7 @@
       </parameter>
       <parameter>
         <id>NUM_RESET</id>
-        <value type="dec">6</value>
+        <value type="dec">7</value>
       </parameter>
       <parameter>
         <id>NUM_AUTO_RESET</id>
@@ -586,6 +598,31 @@
       </signal>
     </ip_instance>
     <ip_instance>
+      <name>i_mnim_i_vta00_data</name>
+      <parameter>
+        <id>NODE_ID</id>
+        <value type="text">`NODE_ID_I_MNIM_I_VTA00_DATA</value>
+      </parameter>
+      <parameter>
+        <id>BW_FNI_PHIT</id>
+        <value type="text">BW_FNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_BNI_PHIT</id>
+        <value type="text">BW_BNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_PLATFORM_ADDR</id>
+        <value type="dec">32</value>
+      </parameter>
+      <parameter>
+        <id>BW_NODE_DATA</id>
+        <value type="dec">64</value>
+      </parameter>
+      <library_name>mni_axi4_asynch</library_name>
+      <domain>gclk_vta</domain>
+    </ip_instance>
+    <ip_instance>
       <name>i_mnim_platform_controller_master</name>
       <parameter>
         <id>NODE_ID</id>
@@ -735,6 +772,31 @@
       <library_name>sni_axi_synch</library_name>
       <domain>clk_dram_if</domain>
     </ip_instance>
+    <ip_instance>
+      <name>i_snim_i_vta00_config</name>
+      <parameter>
+        <id>NODE_ID</id>
+        <value type="text">`NODE_ID_I_SNIM_I_VTA00_CONFIG</value>
+      </parameter>
+      <parameter>
+        <id>BW_FNI_PHIT</id>
+        <value type="text">BW_FNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_BNI_PHIT</id>
+        <value type="text">BW_BNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_PLATFORM_ADDR</id>
+        <value type="dec">32</value>
+      </parameter>
+      <parameter>
+        <id>BW_NODE_DATA</id>
+        <value type="dec">32</value>
+      </parameter>
+      <library_name>sni_axi4l_asynch</library_name>
+      <domain>gclk_vta</domain>
+    </ip_instance>
     <clock_info>
       <define>
         <name>clk_system</name>
@@ -777,6 +839,10 @@
         <value type="text">imp_dependent</value>
       </define>
       <define>
+        <name>clk_vta</name>
+        <value type="equal">clk_core</value>
+      </define>
+      <define>
         <name>clk_noc</name>
         <value type="equal">clk_dram_if</value>
       </define>
@@ -807,6 +873,10 @@
       <define>
         <name>gclk_process_000</name>
         <value type="equal">clk_process_000</value>
+      </define>
+      <define>
+        <name>gclk_vta</name>
+        <value type="equal">clk_vta</value>
       </define>
       <define>
         <name>gclk_noc</name>
@@ -879,6 +949,12 @@
       <user_available/>
     </signal>
     <signal>
+      <name>clk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>clk_vta</comm_type>
+      <user_available/>
+    </signal>
+    <signal>
       <name>clk_noc</name>
       <width type="dec">1</width>
       <comm_type>clk_noc</comm_type>
@@ -937,6 +1013,12 @@
       <user_available/>
     </signal>
     <signal>
+      <name>gclk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>gclk_vta</comm_type>
+      <user_available/>
+    </signal>
+    <signal>
       <name>gclk_noc</name>
       <width type="dec">1</width>
       <comm_type>gclk_noc</comm_type>
@@ -990,12 +1072,12 @@
     </signal>
     <signal>
       <name>rstnn_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
       <user_available/>
     </signal>
     <signal>
       <name>rstpp_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
       <user_available/>
     </signal>
     <signal>
@@ -1044,6 +1126,10 @@
       <output>clk_process_000</output>
     </connect>
     <connect>
+      <input>clk_core</input>
+      <output>clk_vta</output>
+    </connect>
+    <connect>
       <input>clk_dram_if</input>
       <output>clk_noc</output>
     </connect>
@@ -1082,6 +1168,10 @@
     <connect>
       <input>clk_process_000</input>
       <output>gclk_process_000</output>
+    </connect>
+    <connect>
+      <input>clk_vta</input>
+      <output>gclk_vta</output>
     </connect>
     <connect>
       <input>clk_noc</input>
@@ -1232,6 +1322,10 @@
       <output>i_main_core/rstnn</output>
     </connect>
     <connect>
+      <input>rstnn_seqeunce[6]</input>
+      <output>i_vta00/rstnn</output>
+    </connect>
+    <connect>
       <input>rstnn_seqeunce[3]</input>
       <output>rstnn_user</output>
     </connect>
@@ -1270,6 +1364,10 @@
     <connect>
       <input>i_system_ddr/clk_dram_if</input>
       <output>clk_dram_if</output>
+    </connect>
+    <connect>
+      <input>gclk_vta</input>
+      <output>i_vta00/clk</output>
     </connect>
     <connect>
       <input>i_pll0/clk_system</input>
@@ -1497,6 +1595,26 @@
     </connect>
     <connect>
       <input>gclk_noc</input>
+      <output>i_mnim_i_vta00_data/clk_network</output>
+    </connect>
+    <connect>
+      <input>rstnn_noc</input>
+      <output>i_mnim_i_vta00_data/rstnn_network</output>
+    </connect>
+    <connect>
+      <input>gclk_vta</input>
+      <output>i_mnim_i_vta00_data/clk_master</output>
+    </connect>
+    <connect>
+      <input>rstnn_seqeunce[6]</input>
+      <output>i_mnim_i_vta00_data/rstnn_master</output>
+    </connect>
+    <connect>
+      <input>i_vta00/data</input>
+      <output>i_mnim_i_vta00_data/ipif</output>
+    </connect>
+    <connect>
+      <input>gclk_noc</input>
       <output>i_mnim_platform_controller_master/clk_network</output>
     </connect>
     <connect>
@@ -1608,6 +1726,26 @@
       <output>i_system_ddr/no_name</output>
     </connect>
     <connect>
+      <input>gclk_noc</input>
+      <output>i_snim_i_vta00_config/clk_network</output>
+    </connect>
+    <connect>
+      <input>rstnn_noc</input>
+      <output>i_snim_i_vta00_config/rstnn_network</output>
+    </connect>
+    <connect>
+      <input>gclk_vta</input>
+      <output>i_snim_i_vta00_config/clk_slave</output>
+    </connect>
+    <connect>
+      <input>rstnn_seqeunce[6]</input>
+      <output>i_snim_i_vta00_config/rstnn_slave</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config/ipif</input>
+      <output>i_vta00/config</output>
+    </connect>
+    <connect>
       <input>i_inter_router_fifo00/ni_master</input>
       <output>qgemm_basic_network_0/i_system_router/ni_slave(0)</output>
     </connect>
@@ -1648,20 +1786,24 @@
       <output>qgemm_basic_network_0/i_user_router/ni_slave(2)</output>
     </connect>
     <connect>
-      <input>i_mnim_platform_controller_master/ni</input>
+      <input>i_mnim_i_vta00_data/ni</input>
       <output>qgemm_basic_network_0/i_user_router/ni_slave(3)</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part/ni</input>
+      <input>i_mnim_platform_controller_master/ni</input>
       <output>qgemm_basic_network_0/i_user_router/ni_slave(4)</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part/ni</input>
+      <input>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part/ni</input>
       <output>qgemm_basic_network_0/i_user_router/ni_slave(5)</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part/ni</input>
+      <input>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part/ni</input>
       <output>qgemm_basic_network_0/i_user_router/ni_slave(6)</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part/ni</input>
+      <output>qgemm_basic_network_0/i_user_router/ni_slave(7)</output>
     </connect>
     <connect>
       <input>qgemm_basic_network_0/i_user_router/ni_master(0)</input>
@@ -1673,6 +1815,10 @@
     </connect>
     <connect>
       <input>qgemm_basic_network_0/i_user_router/ni_master(2)</input>
+      <output>i_snim_i_vta00_config/ni</output>
+    </connect>
+    <connect>
+      <input>qgemm_basic_network_0/i_user_router/ni_master(3)</input>
       <output>i_inter_router_fifo00/ni_slave</output>
     </connect>
     <connect>
@@ -1784,6 +1930,10 @@
       <output>`NOT_CONNECT</output>
     </connect>
     <connect>
+      <input>clk_vta</input>
+      <output>`NOT_CONNECT</output>
+    </connect>
+    <connect>
       <input>clk_noc</input>
       <output>`NOT_CONNECT</output>
     </connect>
@@ -1848,6 +1998,10 @@
       <output>`NOT_CONNECT</output>
     </connect>
     <connect>
+      <input>i_mnim_i_vta00_data/local</input>
+      <output>`NOT_CONNECT</output>
+    </connect>
+    <connect>
       <input>`NOT_CONNECT</input>
       <output>default_slave/comm_disable</output>
     </connect>
@@ -1874,6 +2028,10 @@
     <connect>
       <input>`NOT_CONNECT</input>
       <output>i_snim_i_dca_matrix_qgemm_mq2vta/comm_disable</output>
+    </connect>
+    <connect>
+      <input>`NOT_CONNECT</input>
+      <output>i_snim_i_vta00_config/comm_disable</output>
     </connect>
     <connect>
       <input>core_peri_group/delay_notice</input>
@@ -1928,6 +2086,10 @@
       <output>`NOT_CONNECT</output>
     </connect>
     <connect>
+      <input>i_mnim_i_vta00_data/svri</input>
+      <output>`NOT_CONNECT</output>
+    </connect>
+    <connect>
       <input>i_mnim_platform_controller_master/svri</input>
       <output>`NOT_CONNECT</output>
     </connect>
@@ -1949,6 +2111,10 @@
     </connect>
     <connect>
       <input>i_snim_i_system_ddr_no_name/svri</input>
+      <output>`NOT_CONNECT</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config/svri</input>
       <output>`NOT_CONNECT</output>
     </connect>
     <connect>
@@ -1978,6 +2144,10 @@
     <connect>
       <input>`NOT_CONNECT</input>
       <output>i_mnim_i_main_core_data_uc/comm_disable</output>
+    </connect>
+    <connect>
+      <input>`NOT_CONNECT</input>
+      <output>i_mnim_i_vta00_data/comm_disable</output>
     </connect>
     <connect>
       <input>`NOT_CONNECT</input>
@@ -2040,13 +2210,18 @@
           <size type="hex">0x40000000</size>
         </memorymap>
         <memorymap>
-          <target>i_snim_i_dca_matrix_qgemm_mq2vta</target>
+          <target>i_snim_i_vta00_config</target>
           <baseaddr type="hex">0xc0000000</baseaddr>
+          <size type="hex">0x10000</size>
+        </memorymap>
+        <memorymap>
+          <target>i_snim_i_dca_matrix_qgemm_mq2vta</target>
+          <baseaddr type="hex">0xc0010000</baseaddr>
           <size type="hex">0x8000</size>
         </memorymap>
         <memorymap>
           <target>default_slave</target>
-          <baseaddr type="hex">0xc0008000</baseaddr>
+          <baseaddr type="hex">0xc0018000</baseaddr>
           <size type="hex">0x1000</size>
         </memorymap>
         <memorymap>
@@ -2141,6 +2316,10 @@
             <port>0</port>
           </response_routing_info>
           <response_routing_info>
+            <target>i_mnim_i_vta00_data</target>
+            <port>0</port>
+          </response_routing_info>
+          <response_routing_info>
             <target>i_mnim_platform_controller_master</target>
             <port>0</port>
           </response_routing_info>
@@ -2171,11 +2350,11 @@
         </parameter>
         <parameter>
           <id>NUM_MASTER</id>
-          <value type="dec">7</value>
+          <value type="dec">8</value>
         </parameter>
         <parameter>
           <id>NUM_SLAVE</id>
-          <value type="dec">3</value>
+          <value type="dec">4</value>
         </parameter>
         <parameter>
           <id>ROUTER_ID</id>
@@ -2195,20 +2374,24 @@
             <port>2</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_platform_controller_master</target>
+            <target>i_mnim_i_vta00_data</target>
             <port>3</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
+            <target>i_mnim_platform_controller_master</target>
             <port>4</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
+            <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
             <port>5</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+            <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
             <port>6</port>
+          </response_routing_info>
+          <response_routing_info>
+            <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+            <port>7</port>
           </response_routing_info>
           <request_routing_info>
             <target>i_snim_i_dca_matrix_qgemm_mq2vta</target>
@@ -2219,28 +2402,32 @@
             <port>1</port>
           </request_routing_info>
           <request_routing_info>
-            <target>i_snim_i_system_sram_no_name</target>
+            <target>i_snim_i_vta00_config</target>
             <port>2</port>
+          </request_routing_info>
+          <request_routing_info>
+            <target>i_snim_i_system_sram_no_name</target>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_common_peri_group_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_external_peri_group_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_platform_controller_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>default_slave</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_i_dca_matrix_qgemm_control_mmiox1_interface_mmio</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
         </routing_table>
       </ip_instance>
@@ -2284,6 +2471,10 @@
             <port>0</port>
           </response_routing_info>
           <response_routing_info>
+            <target>i_mnim_i_vta00_data</target>
+            <port>0</port>
+          </response_routing_info>
+          <response_routing_info>
             <target>i_mnim_platform_controller_master</target>
             <port>0</port>
           </response_routing_info>
@@ -2311,28 +2502,32 @@
             <port>1</port>
           </request_routing_info>
           <request_routing_info>
-            <target>i_snim_i_system_sram_no_name</target>
+            <target>i_snim_i_vta00_config</target>
             <port>2</port>
+          </request_routing_info>
+          <request_routing_info>
+            <target>i_snim_i_system_sram_no_name</target>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_common_peri_group_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_external_peri_group_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_platform_controller_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>default_slave</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_i_dca_matrix_qgemm_control_mmiox1_interface_mmio</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <response_routing_info>
             <target>i_mnim_i_main_core_inst</target>
@@ -2347,20 +2542,24 @@
             <port>2</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_platform_controller_master</target>
+            <target>i_mnim_i_vta00_data</target>
             <port>3</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
+            <target>i_mnim_platform_controller_master</target>
             <port>4</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
+            <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
             <port>5</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+            <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
             <port>6</port>
+          </response_routing_info>
+          <response_routing_info>
+            <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+            <port>7</port>
           </response_routing_info>
         </router>
       </routing_table>
@@ -2368,11 +2567,11 @@
         <name>munoc_config</name>
         <define>
           <name>NUM_SLAVE</name>
-          <value type="dec">8</value>
+          <value type="dec">9</value>
         </define>
         <define>
           <name>NUM_MASTER</name>
-          <value type="dec">7</value>
+          <value type="dec">8</value>
         </define>
         <define>
           <name>BW_SLAVE_NODE_ID</name>
@@ -2380,7 +2579,7 @@
         </define>
         <define>
           <name>BW_MASTER_NODE_ID</name>
-          <value type="dec">3</value>
+          <value type="dec">4</value>
         </define>
         <define>
           <name>BW_LONGEST_AXI_TID</name>
@@ -2419,7 +2618,7 @@
         </define>
         <define>
           <name>NODE_ID_I_SNIM_PLATFORM_CONTROLLER_NO_NAME</name>
-          <value type="dec">7</value>
+          <value type="dec">8</value>
         </define>
         <define>
           <name>NODE_ID_DEFAULT_SLAVE</name>
@@ -2442,8 +2641,12 @@
           <value type="dec">4</value>
         </define>
         <define>
-          <name>NODE_ID_I_MNIM_PLATFORM_CONTROLLER_MASTER</name>
+          <name>NODE_ID_I_MNIM_I_VTA00_DATA</name>
           <value type="dec">6</value>
+        </define>
+        <define>
+          <name>NODE_ID_I_MNIM_PLATFORM_CONTROLLER_MASTER</name>
+          <value type="dec">7</value>
         </define>
         <define>
           <name>NODE_ID_I_MNIM_I_DCA_MATRIX_QGEMM_MX_MLSU_NOC_PART</name>
@@ -2464,6 +2667,10 @@
         <define>
           <name>NODE_ID_I_SNIM_I_SYSTEM_DDR_NO_NAME</name>
           <value type="dec">5</value>
+        </define>
+        <define>
+          <name>NODE_ID_I_SNIM_I_VTA00_CONFIG</name>
+          <value type="dec">7</value>
         </define>
       </header_file>
       <header_file>

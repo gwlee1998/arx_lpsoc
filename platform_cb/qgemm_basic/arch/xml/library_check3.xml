@@ -13256,6 +13256,13 @@
       <port>output</port>
     </signal>
     <signal>
+      <name>clk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>clk_vta</comm_type>
+      <user_available/>
+      <port>output</port>
+    </signal>
+    <signal>
       <name>clk_noc</name>
       <width type="dec">1</width>
       <comm_type>clk_noc</comm_type>
@@ -13308,6 +13315,13 @@
       <name>gclk_process_000</name>
       <width type="dec">1</width>
       <comm_type>gclk_process_000</comm_type>
+      <user_available/>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>gclk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>gclk_vta</comm_type>
       <user_available/>
       <port>output</port>
     </signal>
@@ -13368,13 +13382,13 @@
     </signal>
     <signal>
       <name>rstnn_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
       <user_available/>
       <port>output</port>
     </signal>
     <signal>
       <name>rstpp_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
       <user_available/>
       <port>output</port>
     </signal>

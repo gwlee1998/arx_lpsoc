@@ -20,6 +20,10 @@
 				<name>num_led_checker</name>
 				<value>1</value>
 			</define>
+			<define>
+				<name>num_vta</name>
+				<value>1</value>
+			</define>
       <define>
 				<name>include_slow_dram</name>
 				<value type="bool">True</value>

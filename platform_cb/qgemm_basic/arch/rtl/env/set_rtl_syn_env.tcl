@@ -7,6 +7,13 @@ source ${RVX_HWLIB_HOME}/peripheral/external_peri_group/env/add_syn_source.tcl
 source ${RVX_HWLIB_HOME}/peripheral/mmiox/env/add_syn_source.tcl
 source ${RVX_HWLIB_HOME}/core/orca_plus/env/add_syn_source.tcl
 source ${RVX_HWLIB_HOME}/peripheral/timer/env/add_syn_source.tcl
+set VTA_LOCAL_SOURCE_FILE ${PLATFORM_DIR}/user/vta/env/add_syn_source.tcl
+set VTA_GLOBAL_SOURCE_FILE ${RVX_SPECIAL_IP_HOME}/vta/env/add_syn_source.tcl
+if {[file exist ${VTA_LOCAL_SOURCE_FILE}]} {
+	source ${VTA_LOCAL_SOURCE_FILE}
+} elseif {[file exist ${VTA_GLOBAL_SOURCE_FILE}]} {
+	source ${VTA_GLOBAL_SOURCE_FILE}
+}
 source ${RVX_HWLIB_HOME}/peripheral/checker/env/add_syn_source.tcl
 set DCA_SOURCE_FILE ${DCA_HW_HOME}/env/add_syn_source.tcl
 if {[file exist ${DCA_SOURCE_FILE}]} {

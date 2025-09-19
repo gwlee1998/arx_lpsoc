@@ -68,7 +68,7 @@ set ::USE_DCA 1
 # set ::USE_DMA
 # set ::USE_FLORIAN
 # set ::USE_TRAFFIC_GENERATOR
-# set ::USE_VTA
+set ::USE_VTA 1
 # set ::USE_LCD_SHIELD
 # set ::USE_GPIO_PINMUX
 # set ::USE_USER_DDR4

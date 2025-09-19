@@ -81,8 +81,6 @@ module DCA_MATRIX_QGEMM_MMIOX_MLSU
   mo_sstore_tensor_row_rready,
   mo_sstore_tensor_row_rdata,
 
-  
-
 	mq2vta_rxawid,
 	mq2vta_rxawaddr,
 	mq2vta_rxawlen,

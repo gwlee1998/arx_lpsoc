@@ -11,7 +11,7 @@
 // IN ANY FORM, BY ANY MEANS, IN WHOLE OR IN PART, WITHOUT THE
 // COMPLETE PRIOR WRITTEN PERMISSION OF ETRI.
 // ****************************************************************************
-// 2025-09-17
+// 2025-09-18
 // Kyuseung Han (han@etri.re.kr)
 // ****************************************************************************
 // ****************************************************************************
@@ -66,6 +66,7 @@ wire clk_process_000;
 wire clk_dram_if;
 wire clk_dram_sys;
 wire clk_dram_ref;
+wire clk_vta;
 wire clk_noc;
 wire gclk_system;
 wire gclk_dca_core;
@@ -74,6 +75,7 @@ wire gclk_system_external;
 wire gclk_system_debug;
 wire gclk_local_access;
 wire gclk_process_000;
+wire gclk_vta;
 wire gclk_noc;
 wire tick_1us;
 wire tick_62d5ms;
@@ -82,8 +84,8 @@ wire spi_common_sclk;
 wire spi_common_sdq0;
 wire global_rstnn;
 wire global_rstpp;
-wire [(6)-1:0] rstnn_seqeunce;
-wire [(6)-1:0] rstpp_seqeunce;
+wire [(7)-1:0] rstnn_seqeunce;
+wire [(7)-1:0] rstpp_seqeunce;
 wire rstnn_user;
 wire rstpp_user;
 wire i_rtl_clk_system;
@@ -96,6 +98,7 @@ wire i_rtl_clk_process_000;
 wire i_rtl_clk_dram_if;
 wire i_rtl_clk_dram_sys;
 wire i_rtl_clk_dram_ref;
+wire i_rtl_clk_vta;
 wire i_rtl_clk_noc;
 wire i_rtl_gclk_system;
 wire i_rtl_gclk_dca_core;
@@ -104,6 +107,7 @@ wire i_rtl_gclk_system_external;
 wire i_rtl_gclk_system_debug;
 wire i_rtl_gclk_local_access;
 wire i_rtl_gclk_process_000;
+wire i_rtl_gclk_vta;
 wire i_rtl_gclk_noc;
 wire i_rtl_tick_1us;
 wire i_rtl_tick_62d5ms;
@@ -113,8 +117,8 @@ wire i_rtl_spi_common_sdq0;
 wire i_rtl_external_rstnn;
 wire i_rtl_global_rstnn;
 wire i_rtl_global_rstpp;
-wire [(6)-1:0] i_rtl_rstnn_seqeunce;
-wire [(6)-1:0] i_rtl_rstpp_seqeunce;
+wire [(7)-1:0] i_rtl_rstnn_seqeunce;
+wire [(7)-1:0] i_rtl_rstpp_seqeunce;
 wire i_rtl_rstnn_user;
 wire i_rtl_rstpp_user;
 wire [((1)*(1))-1:0] i_rtl_led_list;
@@ -285,6 +289,7 @@ i_rtl
 	.clk_dram_if(i_rtl_clk_dram_if),
 	.clk_dram_sys(i_rtl_clk_dram_sys),
 	.clk_dram_ref(i_rtl_clk_dram_ref),
+	.clk_vta(i_rtl_clk_vta),
 	.clk_noc(i_rtl_clk_noc),
 	.gclk_system(i_rtl_gclk_system),
 	.gclk_dca_core(i_rtl_gclk_dca_core),
@@ -293,6 +298,7 @@ i_rtl
 	.gclk_system_debug(i_rtl_gclk_system_debug),
 	.gclk_local_access(i_rtl_gclk_local_access),
 	.gclk_process_000(i_rtl_gclk_process_000),
+	.gclk_vta(i_rtl_gclk_vta),
 	.gclk_noc(i_rtl_gclk_noc),
 	.tick_1us(i_rtl_tick_1us),
 	.tick_62d5ms(i_rtl_tick_62d5ms),
@@ -503,6 +509,7 @@ assign clk_process_000 = i_rtl_clk_process_000;
 assign clk_dram_if = i_rtl_clk_dram_if;
 assign clk_dram_sys = i_rtl_clk_dram_sys;
 assign clk_dram_ref = i_rtl_clk_dram_ref;
+assign clk_vta = i_rtl_clk_vta;
 assign clk_noc = i_rtl_clk_noc;
 assign gclk_system = i_rtl_gclk_system;
 assign gclk_dca_core = i_rtl_gclk_dca_core;
@@ -511,6 +518,7 @@ assign gclk_system_external = i_rtl_gclk_system_external;
 assign gclk_system_debug = i_rtl_gclk_system_debug;
 assign gclk_local_access = i_rtl_gclk_local_access;
 assign gclk_process_000 = i_rtl_gclk_process_000;
+assign gclk_vta = i_rtl_gclk_vta;
 assign gclk_noc = i_rtl_gclk_noc;
 assign tick_1us = i_rtl_tick_1us;
 assign tick_62d5ms = i_rtl_tick_62d5ms;

@@ -15,8 +15,20 @@
       <value type="hex">0x3fffffff</value>
     </define>
     <define>
-      <name>I_DCA_MATRIX_QGEMM_MQ2VTA_BASEADDR</name>
+      <name>I_VTA00_CONFIG_BASEADDR</name>
       <value type="hex">0xc0000000</value>
+    </define>
+    <define>
+      <name>I_VTA00_CONFIG_SIZE</name>
+      <value type="hex">0x10000</value>
+    </define>
+    <define>
+      <name>I_VTA00_CONFIG_LASTADDR</name>
+      <value type="hex">0xc000ffff</value>
+    </define>
+    <define>
+      <name>I_DCA_MATRIX_QGEMM_MQ2VTA_BASEADDR</name>
+      <value type="hex">0xc0010000</value>
     </define>
     <define>
       <name>I_DCA_MATRIX_QGEMM_MQ2VTA_SIZE</name>
@@ -24,11 +36,11 @@
     </define>
     <define>
       <name>I_DCA_MATRIX_QGEMM_MQ2VTA_LASTADDR</name>
-      <value type="hex">0xc0007fff</value>
+      <value type="hex">0xc0017fff</value>
     </define>
     <define>
       <name>DEFAULT_SLAVE_BASEADDR</name>
-      <value type="hex">0xc0008000</value>
+      <value type="hex">0xc0018000</value>
     </define>
     <define>
       <name>DEFAULT_SLAVE_SIZE</name>
@@ -36,7 +48,7 @@
     </define>
     <define>
       <name>DEFAULT_SLAVE_LASTADDR</name>
-      <value type="hex">0xc0008fff</value>
+      <value type="hex">0xc0018fff</value>
     </define>
     <define>
       <name>I_SYSTEM_SRAM_BASEADDR</name>
@@ -112,7 +124,7 @@
     </define>
     <define>
       <name>NOC_CONTROLLER_BASEADDR</name>
-      <value type="hex">0xc0008000</value>
+      <value type="hex">0xc0018000</value>
     </define>
     <define>
       <name>IROM_BASEADDR</name>
@@ -407,7 +419,7 @@
     </define>
     <define>
       <name>INCLUDE_VTA</name>
-      <value type="bool">False</value>
+      <value type="bool">True</value>
     </define>
     <define>
       <name>INCLUDE_LCD_SHIELD</name>
@@ -495,7 +507,7 @@
     </define>
     <define>
       <name>NUM_VTA</name>
-      <value type="dec">0</value>
+      <value type="dec">1</value>
     </define>
     <define>
       <name>NUM_C2C_MASTER</name>
@@ -1030,7 +1042,7 @@
     </define>
     <define>
       <name>USE_VTA</name>
-      <value type="bool">False</value>
+      <value type="bool">True</value>
     </define>
     <define>
       <name>USE_LCD_SHIELD</name>

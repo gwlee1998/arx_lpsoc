@@ -77,6 +77,12 @@
         <port>output</port>
       </signal>
       <signal>
+        <name>clk_vta</name>
+        <width type="dec">1</width>
+        <comm_type>clk_vta</comm_type>
+        <port>output</port>
+      </signal>
+      <signal>
         <name>clk_noc</name>
         <width type="dec">1</width>
         <comm_type>clk_noc</comm_type>
@@ -122,6 +128,12 @@
         <name>gclk_process_000</name>
         <width type="dec">1</width>
         <comm_type>gclk_process_000</comm_type>
+        <port>output</port>
+      </signal>
+      <signal>
+        <name>gclk_vta</name>
+        <width type="dec">1</width>
+        <comm_type>gclk_vta</comm_type>
         <port>output</port>
       </signal>
       <signal>
@@ -173,12 +185,12 @@
       </signal>
       <signal>
         <name>rstnn_seqeunce</name>
-        <width type="dec">6</width>
+        <width type="dec">7</width>
         <port>output</port>
       </signal>
       <signal>
         <name>rstpp_seqeunce</name>
-        <width type="dec">6</width>
+        <width type="dec">7</width>
         <port>output</port>
       </signal>
       <signal>
@@ -1334,6 +1346,11 @@
       <comm_type>clk_dram_ref</comm_type>
     </signal>
     <signal>
+      <name>clk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>clk_vta</comm_type>
+    </signal>
+    <signal>
       <name>clk_noc</name>
       <width type="dec">1</width>
       <comm_type>clk_noc</comm_type>
@@ -1374,6 +1391,11 @@
       <comm_type>gclk_process_000</comm_type>
     </signal>
     <signal>
+      <name>gclk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>gclk_vta</comm_type>
+    </signal>
+    <signal>
       <name>gclk_noc</name>
       <width type="dec">1</width>
       <comm_type>gclk_noc</comm_type>
@@ -1408,11 +1430,11 @@
     </signal>
     <signal>
       <name>rstnn_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
     </signal>
     <signal>
       <name>rstpp_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
     </signal>
     <signal>
       <name>rstnn_user</name>
@@ -1512,6 +1534,10 @@
       <width type="dec">1</width>
     </signal>
     <signal>
+      <name>i_rtl_clk_vta</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
       <name>i_rtl_clk_noc</name>
       <width type="dec">1</width>
     </signal>
@@ -1541,6 +1567,10 @@
     </signal>
     <signal>
       <name>i_rtl_gclk_process_000</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_rtl_gclk_vta</name>
       <width type="dec">1</width>
     </signal>
     <signal>
@@ -1581,11 +1611,11 @@
     </signal>
     <signal>
       <name>i_rtl_rstnn_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
     </signal>
     <signal>
       <name>i_rtl_rstpp_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
     </signal>
     <signal>
       <name>i_rtl_rstnn_user</name>
@@ -2312,6 +2342,10 @@
       <output>clk_dram_ref</output>
     </connect>
     <connect>
+      <input>i_rtl_clk_vta</input>
+      <output>clk_vta</output>
+    </connect>
+    <connect>
       <input>i_rtl_clk_noc</input>
       <output>clk_noc</output>
     </connect>
@@ -2342,6 +2376,10 @@
     <connect>
       <input>i_rtl_gclk_process_000</input>
       <output>gclk_process_000</output>
+    </connect>
+    <connect>
+      <input>i_rtl_gclk_vta</input>
+      <output>gclk_vta</output>
     </connect>
     <connect>
       <input>i_rtl_gclk_noc</input>
@@ -2687,6 +2725,10 @@
         <value type="dec">1</value>
       </define>
       <define>
+        <name>num_vta</name>
+        <value type="dec">1</value>
+      </define>
+      <define>
         <name>include_slow_dram</name>
         <value type="bool">True</value>
       </define>
@@ -2717,6 +2759,10 @@
       <define>
         <name>sram_port_width</name>
         <value type="dec">32</value>
+      </define>
+      <define>
+        <name>include_vta</name>
+        <value type="bool">True</value>
       </define>
       <define>
         <name>include_core_peri_group</name>
@@ -4118,6 +4164,344 @@
       </signal>
     </ip_instance>
     <ip_instance>
+      <name>i_vta00</name>
+      <library_name>vta</library_name>
+      <hdl_name>ERVP_VTA</hdl_name>
+      <signal>
+        <name>clk</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <comm_type>gclk_vta</comm_type>
+      </signal>
+      <signal>
+        <name>rstnn</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>data_sx4awready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4awvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4awaddr</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4awid</name>
+        <width type="text">4</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4awlen</name>
+        <width type="text">8</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4awsize</name>
+        <width type="text">3</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4awburst</name>
+        <width type="text">2</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4wready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4wvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4wdata</name>
+        <width type="text">64</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4wstrb</name>
+        <width type="text">64/8</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4wlast</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4bready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4bvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4bid</name>
+        <width type="text">4</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4bresp</name>
+        <width type="text">2</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4arready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4arvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4araddr</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4arid</name>
+        <width type="text">4</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4arlen</name>
+        <width type="text">8</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4arsize</name>
+        <width type="text">3</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4arburst</name>
+        <width type="text">2</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4rready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4rvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4rid</name>
+        <width type="text">4</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4rdata</name>
+        <width type="text">64</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4rlast</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>data_sx4rresp</name>
+        <width type="text">2</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lawready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lawvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lawaddr</name>
+        <width type="text">32</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lwready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lwvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lwdata</name>
+        <width type="text">32</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lwstrb</name>
+        <width type="text">32/8</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lbready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lbvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lbresp</name>
+        <width type="text">2</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4larready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4larvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4laraddr</name>
+        <width type="text">32</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lrready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lrvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lrdata</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>config_rx4lrresp</name>
+        <width type="text">2</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+    </ip_instance>
+    <ip_instance>
       <name>common_peri_group</name>
       <library_name>common_peri_group</library_name>
       <parameter>
@@ -4835,7 +5219,7 @@
       </parameter>
       <parameter>
         <id>NUM_RESET</id>
-        <value type="dec">6</value>
+        <value type="dec">7</value>
       </parameter>
       <parameter>
         <id>NUM_AUTO_RESET</id>
@@ -4872,12 +5256,12 @@
       </signal>
       <signal>
         <name>rstnn_seqeunce</name>
-        <width type="text">6</width>
+        <width type="text">7</width>
         <port>output</port>
       </signal>
       <signal>
         <name>rstpp_seqeunce</name>
-        <width type="text">6</width>
+        <width type="text">7</width>
         <port>output</port>
       </signal>
       <signal>
@@ -8549,6 +8933,386 @@
       </signal>
     </ip_instance>
     <ip_instance>
+      <name>i_mnim_i_vta00_data</name>
+      <parameter>
+        <id>NODE_ID</id>
+        <value type="text">`NODE_ID_I_MNIM_I_VTA00_DATA</value>
+      </parameter>
+      <parameter>
+        <id>BW_FNI_PHIT</id>
+        <value type="text">BW_FNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_BNI_PHIT</id>
+        <value type="text">BW_BNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_PLATFORM_ADDR</id>
+        <value type="dec">32</value>
+      </parameter>
+      <parameter>
+        <id>BW_NODE_DATA</id>
+        <value type="dec">64</value>
+      </parameter>
+      <parameter>
+        <id>NAME</id>
+        <value type="text">&quot;i_vta00_data&quot;</value>
+      </parameter>
+      <parameter>
+        <id>BW_AXI_MASTER_TID</id>
+        <value type="dec">4</value>
+      </parameter>
+      <library_name>mni_axi4_asynch</library_name>
+      <domain>gclk_vta</domain>
+      <hdl_name>MUNOC_AXI4_MASTER_NETWORK_INTERFACE_MODULE_ASYNCH</hdl_name>
+      <signal>
+        <name>clk_network</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>rstnn_network</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>clk_master</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>rstnn_master</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>comm_disable</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <comm_type>comm_disable_#</comm_type>
+      </signal>
+      <signal>
+        <name>local_allows_holds</name>
+        <width type="dec">1</width>
+        <port>output</port>
+      </signal>
+      <signal>
+        <name>rx4awready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4awvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4awaddr</name>
+        <width type="text">32</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4awid</name>
+        <width type="text">4</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4awlen</name>
+        <width type="text">8</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4awsize</name>
+        <width type="text">3</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4awburst</name>
+        <width type="text">2</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4wready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4wvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4wdata</name>
+        <width type="text">64</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4wstrb</name>
+        <width type="text">64/8</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4wlast</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4bready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4bvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4bid</name>
+        <width type="text">4</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4bresp</name>
+        <width type="text">2</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4arready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4arvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4araddr</name>
+        <width type="text">32</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4arid</name>
+        <width type="text">4</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4arlen</name>
+        <width type="text">8</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4arsize</name>
+        <width type="text">3</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4arburst</name>
+        <width type="text">2</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4rready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4rvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4rid</name>
+        <width type="text">4</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4rdata</name>
+        <width type="text">64</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4rlast</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>rx4rresp</name>
+        <width type="text">2</width>
+        <port>output</port>
+        <sync>clk_master</sync>
+        <init>rstnn_master</init>
+      </signal>
+      <signal>
+        <name>sfni_link</name>
+        <width type="text">`BW_FNI_LINK(BW_FNI_PHIT)</width>
+        <port>output</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>sfni_ready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>sbni_link</name>
+        <width type="text">`BW_BNI_LINK(BW_BNI_PHIT)</width>
+        <port>input</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>sbni_ready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>svri_rlink</name>
+        <width type="text">`BW_SVRING_LINK</width>
+        <port>input</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>svri_rack</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>svri_slink</name>
+        <width type="text">`BW_SVRING_LINK</width>
+        <port>output</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>svri_sack</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>local_spsel</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_spenable</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_spwrite</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_spaddr</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_spwdata</name>
+        <width type="text">64</width>
+        <port>output</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_spready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_sprdata</name>
+        <width type="text">64</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+      <signal>
+        <name>local_spslverr</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk</sync>
+        <init>rstnn</init>
+      </signal>
+    </ip_instance>
+    <ip_instance>
       <name>i_mnim_platform_controller_master</name>
       <parameter>
         <id>NODE_ID</id>
@@ -10118,6 +10882,237 @@
       </signal>
     </ip_instance>
     <ip_instance>
+      <name>i_snim_i_vta00_config</name>
+      <parameter>
+        <id>NODE_ID</id>
+        <value type="text">`NODE_ID_I_SNIM_I_VTA00_CONFIG</value>
+      </parameter>
+      <parameter>
+        <id>BW_FNI_PHIT</id>
+        <value type="text">BW_FNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_BNI_PHIT</id>
+        <value type="text">BW_BNI_PHIT</value>
+      </parameter>
+      <parameter>
+        <id>BW_PLATFORM_ADDR</id>
+        <value type="dec">32</value>
+      </parameter>
+      <parameter>
+        <id>BW_NODE_DATA</id>
+        <value type="dec">32</value>
+      </parameter>
+      <parameter>
+        <id>NAME</id>
+        <value type="text">&quot;i_vta00_config&quot;</value>
+      </parameter>
+      <library_name>sni_axi4l_asynch</library_name>
+      <domain>gclk_vta</domain>
+      <hdl_name>MUNOC_AXI4L_SLAVE_NETWORK_INTERFACE_MODULE_ASYNCH</hdl_name>
+      <signal>
+        <name>clk_network</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>rstnn_network</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>clk_slave</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>rstnn_slave</name>
+        <width type="dec">1</width>
+        <port>input</port>
+      </signal>
+      <signal>
+        <name>comm_disable</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <comm_type>not_used</comm_type>
+      </signal>
+      <signal>
+        <name>sx4lawready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lawvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lawaddr</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lwready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lwvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lwdata</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lwstrb</name>
+        <width type="text">32/8</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lbready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lbvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lbresp</name>
+        <width type="text">2</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4larready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4larvalid</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4laraddr</name>
+        <width type="text">32</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lrready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lrvalid</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lrdata</name>
+        <width type="text">32</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>sx4lrresp</name>
+        <width type="text">2</width>
+        <port>input</port>
+        <sync>clk_slave</sync>
+        <init>rstnn_slave</init>
+      </signal>
+      <signal>
+        <name>rfni_link</name>
+        <width type="text">`BW_FNI_LINK(BW_FNI_PHIT)</width>
+        <port>input</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>rfni_ready</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>rbni_link</name>
+        <width type="text">`BW_BNI_LINK(BW_BNI_PHIT)</width>
+        <port>output</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>rbni_ready</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>clk_network</sync>
+        <init>rstnn_network</init>
+      </signal>
+      <signal>
+        <name>svri_rlink</name>
+        <width type="text">`BW_SVRING_LINK</width>
+        <port>input</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>svri_rack</name>
+        <width type="dec">1</width>
+        <port>output</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>svri_slink</name>
+        <width type="text">`BW_SVRING_LINK</width>
+        <port>output</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+      <signal>
+        <name>svri_sack</name>
+        <width type="dec">1</width>
+        <port>input</port>
+        <sync>None</sync>
+        <init>None</init>
+      </signal>
+    </ip_instance>
+    <ip_instance>
       <name>i_system_router</name>
       <library_name>router</library_name>
       <parameter>
@@ -10175,6 +11170,10 @@
         </response_routing_info>
         <response_routing_info>
           <target>i_mnim_i_main_core_data_uc</target>
+          <port>0</port>
+        </response_routing_info>
+        <response_routing_info>
+          <target>i_mnim_i_vta00_data</target>
           <port>0</port>
         </response_routing_info>
         <response_routing_info>
@@ -10275,11 +11274,11 @@
       </parameter>
       <parameter>
         <id>NUM_MASTER</id>
-        <value type="dec">7</value>
+        <value type="dec">8</value>
       </parameter>
       <parameter>
         <id>NUM_SLAVE</id>
-        <value type="dec">3</value>
+        <value type="dec">4</value>
       </parameter>
       <parameter>
         <id>ROUTER_ID</id>
@@ -10299,20 +11298,24 @@
           <port>2</port>
         </response_routing_info>
         <response_routing_info>
-          <target>i_mnim_platform_controller_master</target>
+          <target>i_mnim_i_vta00_data</target>
           <port>3</port>
         </response_routing_info>
         <response_routing_info>
-          <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
+          <target>i_mnim_platform_controller_master</target>
           <port>4</port>
         </response_routing_info>
         <response_routing_info>
-          <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
+          <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
           <port>5</port>
         </response_routing_info>
         <response_routing_info>
-          <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+          <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
           <port>6</port>
+        </response_routing_info>
+        <response_routing_info>
+          <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+          <port>7</port>
         </response_routing_info>
         <request_routing_info>
           <target>i_snim_i_dca_matrix_qgemm_mq2vta</target>
@@ -10323,28 +11326,32 @@
           <port>1</port>
         </request_routing_info>
         <request_routing_info>
-          <target>i_snim_i_system_sram_no_name</target>
+          <target>i_snim_i_vta00_config</target>
           <port>2</port>
+        </request_routing_info>
+        <request_routing_info>
+          <target>i_snim_i_system_sram_no_name</target>
+          <port>3</port>
         </request_routing_info>
         <request_routing_info>
           <target>i_snim_common_peri_group_no_name</target>
-          <port>2</port>
+          <port>3</port>
         </request_routing_info>
         <request_routing_info>
           <target>i_snim_external_peri_group_no_name</target>
-          <port>2</port>
+          <port>3</port>
         </request_routing_info>
         <request_routing_info>
           <target>i_snim_platform_controller_no_name</target>
-          <port>2</port>
+          <port>3</port>
         </request_routing_info>
         <request_routing_info>
           <target>default_slave</target>
-          <port>2</port>
+          <port>3</port>
         </request_routing_info>
         <request_routing_info>
           <target>i_snim_i_dca_matrix_qgemm_control_mmiox1_interface_mmio</target>
-          <port>2</port>
+          <port>3</port>
         </request_routing_info>
       </routing_table>
       <hdl_name>MUNOC_NETWORK_DUAL_ROUTER</hdl_name>
@@ -10360,56 +11367,56 @@
       </signal>
       <signal>
         <name>rfni_link_list</name>
-        <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(7)</width>
+        <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(8)</width>
         <port>input</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>rfni_ready_list</name>
-        <width type="text">(1)*(7)</width>
+        <width type="text">(1)*(8)</width>
         <port>output</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>rbni_link_list</name>
-        <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(7)</width>
+        <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(8)</width>
         <port>output</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>rbni_ready_list</name>
-        <width type="text">(1)*(7)</width>
+        <width type="text">(1)*(8)</width>
         <port>input</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>sfni_link_list</name>
-        <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(3)</width>
+        <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(4)</width>
         <port>output</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>sfni_ready_list</name>
-        <width type="text">(1)*(3)</width>
+        <width type="text">(1)*(4)</width>
         <port>input</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>sbni_link_list</name>
-        <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(3)</width>
+        <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(4)</width>
         <port>input</port>
         <sync>clk</sync>
         <init>rstnn</init>
       </signal>
       <signal>
         <name>sbni_ready_list</name>
-        <width type="text">(1)*(3)</width>
+        <width type="text">(1)*(4)</width>
         <port>output</port>
         <sync>clk</sync>
         <init>rstnn</init>
@@ -10457,6 +11464,10 @@
         <value type="text">imp_dependent</value>
       </define>
       <define>
+        <name>clk_vta</name>
+        <value type="equal">clk_core</value>
+      </define>
+      <define>
         <name>clk_noc</name>
         <value type="equal">clk_dram_if</value>
       </define>
@@ -10487,6 +11498,10 @@
       <define>
         <name>gclk_process_000</name>
         <value type="equal">clk_process_000</value>
+      </define>
+      <define>
+        <name>gclk_vta</name>
+        <value type="equal">clk_vta</value>
       </define>
       <define>
         <name>gclk_noc</name>
@@ -10559,6 +11574,12 @@
       <port>output</port>
     </signal>
     <signal>
+      <name>clk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>clk_vta</comm_type>
+      <port>output</port>
+    </signal>
+    <signal>
       <name>clk_noc</name>
       <width type="dec">1</width>
       <comm_type>clk_noc</comm_type>
@@ -10604,6 +11625,12 @@
       <name>gclk_process_000</name>
       <width type="dec">1</width>
       <comm_type>gclk_process_000</comm_type>
+      <port>output</port>
+    </signal>
+    <signal>
+      <name>gclk_vta</name>
+      <width type="dec">1</width>
+      <comm_type>gclk_vta</comm_type>
       <port>output</port>
     </signal>
     <signal>
@@ -10660,12 +11687,12 @@
     </signal>
     <signal>
       <name>rstnn_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
       <port>output</port>
     </signal>
     <signal>
       <name>rstpp_seqeunce</name>
-      <width type="dec">6</width>
+      <width type="dec">7</width>
       <port>output</port>
     </signal>
     <signal>
@@ -11996,6 +13023,198 @@
       <width type="text">(1)*(1)</width>
     </signal>
     <signal>
+      <name>i_vta00_clk</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_rstnn</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awaddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awlen</name>
+      <width type="text">8</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awsize</name>
+      <width type="text">3</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4awburst</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4wready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4wvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4wdata</name>
+      <width type="text">64</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4wstrb</name>
+      <width type="text">64/8</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4wlast</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4bready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4bvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4bid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4bresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4arready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4arvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4araddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4arid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4arlen</name>
+      <width type="text">8</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4arsize</name>
+      <width type="text">3</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4arburst</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4rready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4rvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4rid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4rdata</name>
+      <width type="text">64</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4rlast</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_data_sx4rresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lawready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lawvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lawaddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lwready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lwvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lwdata</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lwstrb</name>
+      <width type="text">32/8</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lbready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lbvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lbresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4larready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4larvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4laraddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lrready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lrvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lrdata</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_vta00_config_rx4lrresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
       <name>common_peri_group_clk</name>
       <width type="dec">1</width>
     </signal>
@@ -12389,11 +13608,11 @@
     </signal>
     <signal>
       <name>platform_controller_rstnn_seqeunce</name>
-      <width type="text">6</width>
+      <width type="text">7</width>
     </signal>
     <signal>
       <name>platform_controller_rstpp_seqeunce</name>
-      <width type="text">6</width>
+      <width type="text">7</width>
     </signal>
     <signal>
       <name>platform_controller_boot_mode</name>
@@ -14328,6 +15547,210 @@
       <width type="dec">1</width>
     </signal>
     <signal>
+      <name>i_mnim_i_vta00_data_clk_network</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rstnn_network</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_clk_master</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rstnn_master</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_comm_disable</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_allows_holds</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awaddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awlen</name>
+      <width type="text">8</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awsize</name>
+      <width type="text">3</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4awburst</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4wready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4wvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4wdata</name>
+      <width type="text">64</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4wstrb</name>
+      <width type="text">64/8</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4wlast</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4bready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4bvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4bid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4bresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4arready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4arvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4araddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4arid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4arlen</name>
+      <width type="text">8</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4arsize</name>
+      <width type="text">3</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4arburst</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4rready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4rvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4rid</name>
+      <width type="text">4</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4rdata</name>
+      <width type="text">64</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4rlast</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_rx4rresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_sfni_link</name>
+      <width type="text">`BW_FNI_LINK(BW_FNI_PHIT)</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_sfni_ready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_sbni_link</name>
+      <width type="text">`BW_BNI_LINK(BW_BNI_PHIT)</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_sbni_ready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_svri_rlink</name>
+      <width type="text">`BW_SVRING_LINK</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_svri_rack</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_svri_slink</name>
+      <width type="text">`BW_SVRING_LINK</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_svri_sack</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spsel</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spenable</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spwrite</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spaddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spwdata</name>
+      <width type="text">64</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_sprdata</name>
+      <width type="text">64</width>
+    </signal>
+    <signal>
+      <name>i_mnim_i_vta00_data_local_spslverr</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
       <name>i_mnim_platform_controller_master_clk_network</name>
       <width type="dec">1</width>
     </signal>
@@ -15132,6 +16555,126 @@
       <width type="dec">1</width>
     </signal>
     <signal>
+      <name>i_snim_i_vta00_config_clk_network</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_rstnn_network</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_clk_slave</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_rstnn_slave</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_comm_disable</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lawready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lawvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lawaddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lwready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lwvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lwdata</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lwstrb</name>
+      <width type="text">32/8</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lbready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lbvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lbresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4larready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4larvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4laraddr</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lrready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lrvalid</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lrdata</name>
+      <width type="text">32</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_sx4lrresp</name>
+      <width type="text">2</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_rfni_link</name>
+      <width type="text">`BW_FNI_LINK(BW_FNI_PHIT)</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_rfni_ready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_rbni_link</name>
+      <width type="text">`BW_BNI_LINK(BW_BNI_PHIT)</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_rbni_ready</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_svri_rlink</name>
+      <width type="text">`BW_SVRING_LINK</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_svri_rack</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_svri_slink</name>
+      <width type="text">`BW_SVRING_LINK</width>
+    </signal>
+    <signal>
+      <name>i_snim_i_vta00_config_svri_sack</name>
+      <width type="dec">1</width>
+    </signal>
+    <signal>
       <name>i_system_router_clk</name>
       <width type="dec">1</width>
     </signal>
@@ -15181,35 +16724,35 @@
     </signal>
     <signal>
       <name>i_user_router_rfni_link_list</name>
-      <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(7)</width>
+      <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(8)</width>
     </signal>
     <signal>
       <name>i_user_router_rfni_ready_list</name>
-      <width type="text">(1)*(7)</width>
+      <width type="text">(1)*(8)</width>
     </signal>
     <signal>
       <name>i_user_router_rbni_link_list</name>
-      <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(7)</width>
+      <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(8)</width>
     </signal>
     <signal>
       <name>i_user_router_rbni_ready_list</name>
-      <width type="text">(1)*(7)</width>
+      <width type="text">(1)*(8)</width>
     </signal>
     <signal>
       <name>i_user_router_sfni_link_list</name>
-      <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(3)</width>
+      <width type="text">(`BW_FNI_LINK(BW_FNI_PHIT))*(4)</width>
     </signal>
     <signal>
       <name>i_user_router_sfni_ready_list</name>
-      <width type="text">(1)*(3)</width>
+      <width type="text">(1)*(4)</width>
     </signal>
     <signal>
       <name>i_user_router_sbni_link_list</name>
-      <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(3)</width>
+      <width type="text">(`BW_BNI_LINK(BW_BNI_PHIT))*(4)</width>
     </signal>
     <signal>
       <name>i_user_router_sbni_ready_list</name>
-      <width type="text">(1)*(3)</width>
+      <width type="text">(1)*(4)</width>
     </signal>
     <connect>
       <input>clk_system</input>
@@ -15234,6 +16777,10 @@
     <connect>
       <input>clk_core</input>
       <output>clk_process_000</output>
+    </connect>
+    <connect>
+      <input>clk_core</input>
+      <output>clk_vta</output>
     </connect>
     <connect>
       <input>clk_dram_if</input>
@@ -15266,6 +16813,10 @@
     <connect>
       <input>clk_process_000</input>
       <output>gclk_process_000</output>
+    </connect>
+    <connect>
+      <input>clk_vta</input>
+      <output>gclk_vta</output>
     </connect>
     <connect>
       <input>clk_noc</input>
@@ -15400,6 +16951,10 @@
       <output>i_main_core_rstnn</output>
     </connect>
     <connect>
+      <input>rstnn_seqeunce[6]</input>
+      <output>i_vta00_rstnn</output>
+    </connect>
+    <connect>
       <input>rstnn_seqeunce[3]</input>
       <output>rstnn_user</output>
     </connect>
@@ -15438,6 +16993,10 @@
     <connect>
       <input>i_system_ddr_clk_dram_if</input>
       <output>clk_dram_if</output>
+    </connect>
+    <connect>
+      <input>gclk_vta</input>
+      <output>i_vta00_clk</output>
     </connect>
     <connect>
       <input>i_pll0_clk_system</input>
@@ -15633,6 +17192,22 @@
     </connect>
     <connect>
       <input>gclk_noc</input>
+      <output>i_mnim_i_vta00_data_clk_network</output>
+    </connect>
+    <connect>
+      <input>rstnn_noc</input>
+      <output>i_mnim_i_vta00_data_rstnn_network</output>
+    </connect>
+    <connect>
+      <input>gclk_vta</input>
+      <output>i_mnim_i_vta00_data_clk_master</output>
+    </connect>
+    <connect>
+      <input>rstnn_seqeunce[6]</input>
+      <output>i_mnim_i_vta00_data_rstnn_master</output>
+    </connect>
+    <connect>
+      <input>gclk_noc</input>
       <output>i_mnim_platform_controller_master_clk_network</output>
     </connect>
     <connect>
@@ -15718,6 +17293,22 @@
     <connect>
       <input>rstnn_noc</input>
       <output>i_snim_i_system_ddr_no_name_rstnn</output>
+    </connect>
+    <connect>
+      <input>gclk_noc</input>
+      <output>i_snim_i_vta00_config_clk_network</output>
+    </connect>
+    <connect>
+      <input>rstnn_noc</input>
+      <output>i_snim_i_vta00_config_rstnn_network</output>
+    </connect>
+    <connect>
+      <input>gclk_vta</input>
+      <output>i_snim_i_vta00_config_clk_slave</output>
+    </connect>
+    <connect>
+      <input>rstnn_seqeunce[6]</input>
+      <output>i_snim_i_vta00_config_rstnn_slave</output>
     </connect>
     <connect>
       <input>autoname_103_tick_62d5ms</input>
@@ -15813,6 +17404,10 @@
     </connect>
     <connect>
       <input>0</input>
+      <output>i_snim_i_vta00_config_comm_disable</output>
+    </connect>
+    <connect>
+      <input>0</input>
       <output>core_peri_group_plic_interrupt</output>
     </connect>
     <connect>
@@ -15834,6 +17429,10 @@
     <connect>
       <input>0</input>
       <output>i_mnim_i_main_core_data_uc_comm_disable</output>
+    </connect>
+    <connect>
+      <input>0</input>
+      <output>i_mnim_i_vta00_data_comm_disable</output>
     </connect>
     <connect>
       <input>0</input>
@@ -16700,6 +18299,122 @@
       <output>i_main_core_data_uc_sxrresp</output>
     </connect>
     <connect>
+      <input>i_mnim_i_vta00_data_rx4awready</input>
+      <output>i_vta00_data_sx4awready</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4awvalid</input>
+      <output>i_mnim_i_vta00_data_rx4awvalid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4awaddr</input>
+      <output>i_mnim_i_vta00_data_rx4awaddr</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4awid</input>
+      <output>i_mnim_i_vta00_data_rx4awid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4awlen</input>
+      <output>i_mnim_i_vta00_data_rx4awlen</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4awsize</input>
+      <output>i_mnim_i_vta00_data_rx4awsize</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4awburst</input>
+      <output>i_mnim_i_vta00_data_rx4awburst</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4wready</input>
+      <output>i_vta00_data_sx4wready</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4wvalid</input>
+      <output>i_mnim_i_vta00_data_rx4wvalid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4wdata</input>
+      <output>i_mnim_i_vta00_data_rx4wdata</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4wstrb</input>
+      <output>i_mnim_i_vta00_data_rx4wstrb</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4wlast</input>
+      <output>i_mnim_i_vta00_data_rx4wlast</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4bready</input>
+      <output>i_mnim_i_vta00_data_rx4bready</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4bvalid</input>
+      <output>i_vta00_data_sx4bvalid</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4bid</input>
+      <output>i_vta00_data_sx4bid</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4bresp</input>
+      <output>i_vta00_data_sx4bresp</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4arready</input>
+      <output>i_vta00_data_sx4arready</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4arvalid</input>
+      <output>i_mnim_i_vta00_data_rx4arvalid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4araddr</input>
+      <output>i_mnim_i_vta00_data_rx4araddr</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4arid</input>
+      <output>i_mnim_i_vta00_data_rx4arid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4arlen</input>
+      <output>i_mnim_i_vta00_data_rx4arlen</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4arsize</input>
+      <output>i_mnim_i_vta00_data_rx4arsize</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4arburst</input>
+      <output>i_mnim_i_vta00_data_rx4arburst</output>
+    </connect>
+    <connect>
+      <input>i_vta00_data_sx4rready</input>
+      <output>i_mnim_i_vta00_data_rx4rready</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4rvalid</input>
+      <output>i_vta00_data_sx4rvalid</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4rid</input>
+      <output>i_vta00_data_sx4rid</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4rdata</input>
+      <output>i_vta00_data_sx4rdata</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4rlast</input>
+      <output>i_vta00_data_sx4rlast</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_vta00_data_rx4rresp</input>
+      <output>i_vta00_data_sx4rresp</output>
+    </connect>
+    <connect>
       <input>i_mnim_platform_controller_master_rhready</input>
       <output>platform_controller_shready</output>
     </connect>
@@ -17200,6 +18915,74 @@
       <output>i_snim_i_system_ddr_no_name_sxrresp</output>
     </connect>
     <connect>
+      <input>i_vta00_config_rx4lawready</input>
+      <output>i_snim_i_vta00_config_sx4lawready</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lawvalid</input>
+      <output>i_vta00_config_rx4lawvalid</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lawaddr</input>
+      <output>i_vta00_config_rx4lawaddr</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4lwready</input>
+      <output>i_snim_i_vta00_config_sx4lwready</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lwvalid</input>
+      <output>i_vta00_config_rx4lwvalid</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lwdata</input>
+      <output>i_vta00_config_rx4lwdata</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lwstrb</input>
+      <output>i_vta00_config_rx4lwstrb</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lbready</input>
+      <output>i_vta00_config_rx4lbready</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4lbvalid</input>
+      <output>i_snim_i_vta00_config_sx4lbvalid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4lbresp</input>
+      <output>i_snim_i_vta00_config_sx4lbresp</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4larready</input>
+      <output>i_snim_i_vta00_config_sx4larready</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4larvalid</input>
+      <output>i_vta00_config_rx4larvalid</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4laraddr</input>
+      <output>i_vta00_config_rx4laraddr</output>
+    </connect>
+    <connect>
+      <input>i_snim_i_vta00_config_sx4lrready</input>
+      <output>i_vta00_config_rx4lrready</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4lrvalid</input>
+      <output>i_snim_i_vta00_config_sx4lrvalid</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4lrdata</input>
+      <output>i_snim_i_vta00_config_sx4lrdata</output>
+    </connect>
+    <connect>
+      <input>i_vta00_config_rx4lrresp</input>
+      <output>i_snim_i_vta00_config_sx4lrresp</output>
+    </connect>
+    <connect>
       <input>i_inter_router_fifo00_sfni_link</input>
       <output>i_system_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(0+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</output>
     </connect>
@@ -17360,68 +19143,84 @@
       <output>i_user_router_rbni_ready_list[1*(2+1)-1 -:1]</output>
     </connect>
     <connect>
-      <input>i_mnim_platform_controller_master_sfni_link</input>
+      <input>i_mnim_i_vta00_data_sfni_link</input>
       <output>i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(3+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</output>
     </connect>
     <connect>
       <input>i_user_router_rfni_ready_list[1*(3+1)-1 -:1]</input>
-      <output>i_mnim_platform_controller_master_sfni_ready</output>
+      <output>i_mnim_i_vta00_data_sfni_ready</output>
     </connect>
     <connect>
       <input>i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(3+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</input>
-      <output>i_mnim_platform_controller_master_sbni_link</output>
+      <output>i_mnim_i_vta00_data_sbni_link</output>
     </connect>
     <connect>
-      <input>i_mnim_platform_controller_master_sbni_ready</input>
+      <input>i_mnim_i_vta00_data_sbni_ready</input>
       <output>i_user_router_rbni_ready_list[1*(3+1)-1 -:1]</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_link</input>
+      <input>i_mnim_platform_controller_master_sfni_link</input>
       <output>i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(4+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</output>
     </connect>
     <connect>
       <input>i_user_router_rfni_ready_list[1*(4+1)-1 -:1]</input>
-      <output>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_ready</output>
+      <output>i_mnim_platform_controller_master_sfni_ready</output>
     </connect>
     <connect>
       <input>i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(4+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</input>
-      <output>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_link</output>
+      <output>i_mnim_platform_controller_master_sbni_link</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_ready</input>
+      <input>i_mnim_platform_controller_master_sbni_ready</input>
       <output>i_user_router_rbni_ready_list[1*(4+1)-1 -:1]</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_link</input>
+      <input>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_link</input>
       <output>i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(5+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</output>
     </connect>
     <connect>
       <input>i_user_router_rfni_ready_list[1*(5+1)-1 -:1]</input>
-      <output>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_ready</output>
+      <output>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sfni_ready</output>
     </connect>
     <connect>
       <input>i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(5+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</input>
-      <output>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_link</output>
+      <output>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_link</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_ready</input>
+      <input>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part_sbni_ready</input>
       <output>i_user_router_rbni_ready_list[1*(5+1)-1 -:1]</output>
     </connect>
     <connect>
-      <input>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_link</input>
+      <input>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_link</input>
       <output>i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(6+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</output>
     </connect>
     <connect>
       <input>i_user_router_rfni_ready_list[1*(6+1)-1 -:1]</input>
-      <output>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_ready</output>
+      <output>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sfni_ready</output>
     </connect>
     <connect>
       <input>i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(6+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</input>
+      <output>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_link</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part_sbni_ready</input>
+      <output>i_user_router_rbni_ready_list[1*(6+1)-1 -:1]</output>
+    </connect>
+    <connect>
+      <input>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_link</input>
+      <output>i_user_router_rfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(7+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</output>
+    </connect>
+    <connect>
+      <input>i_user_router_rfni_ready_list[1*(7+1)-1 -:1]</input>
+      <output>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sfni_ready</output>
+    </connect>
+    <connect>
+      <input>i_user_router_rbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(7+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</input>
       <output>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sbni_link</output>
     </connect>
     <connect>
       <input>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part_sbni_ready</input>
-      <output>i_user_router_rbni_ready_list[1*(6+1)-1 -:1]</output>
+      <output>i_user_router_rbni_ready_list[1*(7+1)-1 -:1]</output>
     </connect>
     <connect>
       <input>i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(0+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</input>
@@ -17457,18 +19256,34 @@
     </connect>
     <connect>
       <input>i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(2+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</input>
-      <output>i_inter_router_fifo00_rfni_link</output>
+      <output>i_snim_i_vta00_config_rfni_link</output>
     </connect>
     <connect>
-      <input>i_inter_router_fifo00_rfni_ready</input>
+      <input>i_snim_i_vta00_config_rfni_ready</input>
       <output>i_user_router_sfni_ready_list[1*(2+1)-1 -:1]</output>
     </connect>
     <connect>
-      <input>i_inter_router_fifo00_rbni_link</input>
+      <input>i_snim_i_vta00_config_rbni_link</input>
       <output>i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(2+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</output>
     </connect>
     <connect>
       <input>i_user_router_sbni_ready_list[1*(2+1)-1 -:1]</input>
+      <output>i_snim_i_vta00_config_rbni_ready</output>
+    </connect>
+    <connect>
+      <input>i_user_router_sfni_link_list[`BW_FNI_LINK(BW_FNI_PHIT)*(3+1)-1 -:`BW_FNI_LINK(BW_FNI_PHIT)]</input>
+      <output>i_inter_router_fifo00_rfni_link</output>
+    </connect>
+    <connect>
+      <input>i_inter_router_fifo00_rfni_ready</input>
+      <output>i_user_router_sfni_ready_list[1*(3+1)-1 -:1]</output>
+    </connect>
+    <connect>
+      <input>i_inter_router_fifo00_rbni_link</input>
+      <output>i_user_router_sbni_link_list[`BW_BNI_LINK(BW_BNI_PHIT)*(3+1)-1 -:`BW_BNI_LINK(BW_BNI_PHIT)]</output>
+    </connect>
+    <connect>
+      <input>i_user_router_sbni_ready_list[1*(3+1)-1 -:1]</input>
       <output>i_inter_router_fifo00_rbni_ready</output>
     </connect>
     <connect>
@@ -17609,6 +19424,18 @@
     </connect>
     <connect>
       <input>0</input>
+      <output>i_mnim_i_vta00_data_local_spready</output>
+    </connect>
+    <connect>
+      <input>0</input>
+      <output>i_mnim_i_vta00_data_local_sprdata</output>
+    </connect>
+    <connect>
+      <input>0</input>
+      <output>i_mnim_i_vta00_data_local_spslverr</output>
+    </connect>
+    <connect>
+      <input>0</input>
       <output>default_slave_svri_rlink</output>
     </connect>
     <connect>
@@ -17681,6 +19508,14 @@
     </connect>
     <connect>
       <input>0</input>
+      <output>i_mnim_i_vta00_data_svri_rlink</output>
+    </connect>
+    <connect>
+      <input>0</input>
+      <output>i_mnim_i_vta00_data_svri_sack</output>
+    </connect>
+    <connect>
+      <input>0</input>
       <output>i_mnim_platform_controller_master_svri_rlink</output>
     </connect>
     <connect>
@@ -17726,6 +19561,14 @@
     <connect>
       <input>0</input>
       <output>i_snim_i_system_ddr_no_name_svri_sack</output>
+    </connect>
+    <connect>
+      <input>0</input>
+      <output>i_snim_i_vta00_config_svri_rlink</output>
+    </connect>
+    <connect>
+      <input>0</input>
+      <output>i_snim_i_vta00_config_svri_sack</output>
     </connect>
     <connect>
       <input>0</input>
@@ -17793,13 +19636,18 @@
           <size type="hex">0x40000000</size>
         </memorymap>
         <memorymap>
-          <target>i_snim_i_dca_matrix_qgemm_mq2vta</target>
+          <target>i_snim_i_vta00_config</target>
           <baseaddr type="hex">0xc0000000</baseaddr>
+          <size type="hex">0x10000</size>
+        </memorymap>
+        <memorymap>
+          <target>i_snim_i_dca_matrix_qgemm_mq2vta</target>
+          <baseaddr type="hex">0xc0010000</baseaddr>
           <size type="hex">0x8000</size>
         </memorymap>
         <memorymap>
           <target>default_slave</target>
-          <baseaddr type="hex">0xc0008000</baseaddr>
+          <baseaddr type="hex">0xc0018000</baseaddr>
           <size type="hex">0x1000</size>
         </memorymap>
         <memorymap>
@@ -17873,6 +19721,10 @@
             <port>0</port>
           </response_routing_info>
           <response_routing_info>
+            <target>i_mnim_i_vta00_data</target>
+            <port>0</port>
+          </response_routing_info>
+          <response_routing_info>
             <target>i_mnim_platform_controller_master</target>
             <port>0</port>
           </response_routing_info>
@@ -17900,28 +19752,32 @@
             <port>1</port>
           </request_routing_info>
           <request_routing_info>
-            <target>i_snim_i_system_sram_no_name</target>
+            <target>i_snim_i_vta00_config</target>
             <port>2</port>
+          </request_routing_info>
+          <request_routing_info>
+            <target>i_snim_i_system_sram_no_name</target>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_common_peri_group_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_external_peri_group_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_platform_controller_no_name</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>default_slave</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <request_routing_info>
             <target>i_snim_i_dca_matrix_qgemm_control_mmiox1_interface_mmio</target>
-            <port>2</port>
+            <port>3</port>
           </request_routing_info>
           <response_routing_info>
             <target>i_mnim_i_main_core_inst</target>
@@ -17936,20 +19792,24 @@
             <port>2</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_platform_controller_master</target>
+            <target>i_mnim_i_vta00_data</target>
             <port>3</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
+            <target>i_mnim_platform_controller_master</target>
             <port>4</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
+            <target>i_mnim_i_dca_matrix_qgemm_mx_mlsu_noc_part</target>
             <port>5</port>
           </response_routing_info>
           <response_routing_info>
-            <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+            <target>i_mnim_i_dca_matrix_qgemm_mw_mlsu_noc_part</target>
             <port>6</port>
+          </response_routing_info>
+          <response_routing_info>
+            <target>i_mnim_i_dca_matrix_qgemm_mo_mlsu_noc_part</target>
+            <port>7</port>
           </response_routing_info>
         </router>
       </routing_table>
@@ -18019,11 +19879,11 @@
       <name>munoc_config</name>
       <define>
         <name>NUM_SLAVE</name>
-        <value type="dec">8</value>
+        <value type="dec">9</value>
       </define>
       <define>
         <name>NUM_MASTER</name>
-        <value type="dec">7</value>
+        <value type="dec">8</value>
       </define>
       <define>
         <name>BW_SLAVE_NODE_ID</name>
@@ -18031,7 +19891,7 @@
       </define>
       <define>
         <name>BW_MASTER_NODE_ID</name>
-        <value type="dec">3</value>
+        <value type="dec">4</value>
       </define>
       <define>
         <name>BW_LONGEST_AXI_TID</name>
@@ -18070,7 +19930,7 @@
       </define>
       <define>
         <name>NODE_ID_I_SNIM_PLATFORM_CONTROLLER_NO_NAME</name>
-        <value type="dec">7</value>
+        <value type="dec">8</value>
       </define>
       <define>
         <name>NODE_ID_DEFAULT_SLAVE</name>
@@ -18093,8 +19953,12 @@
         <value type="dec">4</value>
       </define>
       <define>
-        <name>NODE_ID_I_MNIM_PLATFORM_CONTROLLER_MASTER</name>
+        <name>NODE_ID_I_MNIM_I_VTA00_DATA</name>
         <value type="dec">6</value>
+      </define>
+      <define>
+        <name>NODE_ID_I_MNIM_PLATFORM_CONTROLLER_MASTER</name>
+        <value type="dec">7</value>
       </define>
       <define>
         <name>NODE_ID_I_MNIM_I_DCA_MATRIX_QGEMM_MX_MLSU_NOC_PART</name>
@@ -18115,6 +19979,10 @@
       <define>
         <name>NODE_ID_I_SNIM_I_SYSTEM_DDR_NO_NAME</name>
         <value type="dec">5</value>
+      </define>
+      <define>
+        <name>NODE_ID_I_SNIM_I_VTA00_CONFIG</name>
+        <value type="dec">7</value>
       </define>
     </header_file>
     <header_file>
