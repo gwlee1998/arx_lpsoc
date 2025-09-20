@@ -19,11 +19,7 @@ module DCA_MATRIX_QGEMM_MMIOX_MLSU
 (
   clk,
   rstnn,
-
-  // 테스트 신호
-  q_start,
-  dq_start,
-
+	
   control_rmx_core_config,
   control_rmx_core_status,
   control_rmx_clear_request,
@@ -164,10 +160,6 @@ localparam MREG_RESET_VALUE = TENSOR_ZERO;
 input  wire clk;
 input  wire rstnn;
 
-// 테스트 신호
-input  wire q_start;
-input  wire dq_start;
-
 // ---------------- Control ties ----------------
 input  wire [(BW_CONFIG)-1:0] control_rmx_core_config;
 output wire [(BW_STATUS)-1:0] control_rmx_core_status;
@@ -259,7 +251,7 @@ wire [`BW_DCA_MATRIX_INFO_ALIGNED-1:0] mx_info, mw_info, mo_info;
 wire mx_trans, mw_trans;
 // wire q_start, dq_start;  // 외부 start 비트(레벨)
 
-assign {mo_info, mw_info, mx_info, mx_trans, mw_trans/*, q_start, dq_start*/}
+assign {mo_info, mw_info, mx_info, mx_trans, mw_trans, q_start, dq_start}
        = control_rmx_inst_fifo_rdata;
 
 // ---------------- Dual FSM ----------------
