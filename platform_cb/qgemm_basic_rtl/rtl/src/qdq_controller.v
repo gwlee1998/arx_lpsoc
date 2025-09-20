@@ -219,7 +219,7 @@ module qdq_controller #(
     wire                          dqcore_out_valid_w;
     wire [LANES_NUM*FP_DATA_W-1:0] dqcore_out_data_w;
 
-    wire [3:0]          dqcore_row_idx_w;
+    wire [ROW_W_DQ-1:0]          dqcore_row_idx_w;
 
     assign dq_s_ready_o = dqcore_acc_ready_w;
     assign dq_m_valid_o = dqcore_out_valid_w;
