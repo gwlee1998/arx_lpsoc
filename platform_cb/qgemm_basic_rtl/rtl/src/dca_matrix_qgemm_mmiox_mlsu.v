@@ -249,7 +249,7 @@ assign mq2vta_rxrresp   = 2'b00;
 // ---------------- Inst decode ----------------
 wire [`BW_DCA_MATRIX_INFO_ALIGNED-1:0] mx_info, mw_info, mo_info;
 wire mx_trans, mw_trans;
-// wire q_start, dq_start;  // 외부 start 비트(레벨)
+wire q_start, dq_start;
 
 assign {mo_info, mw_info, mx_info, mx_trans, mw_trans, q_start, dq_start}
        = control_rmx_inst_fifo_rdata;
