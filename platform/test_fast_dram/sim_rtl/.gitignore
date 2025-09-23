@@ -1,8 +1,0 @@
-set_path.mh
-INCA_libs
-wave
-*.hex
-*.log
-work
-vsim.dbg
-xcelium.d/*
