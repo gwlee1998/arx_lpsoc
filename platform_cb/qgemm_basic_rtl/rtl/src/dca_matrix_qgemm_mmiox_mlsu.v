@@ -15,6 +15,9 @@
 `include "dca_matrix_info.vh"
 `include "dca_matrix_lsu_inst.vh"
 
+`include "ervp_axi_define.vh"
+`include "munoc_network_include.vh"
+
 module DCA_MATRIX_QGEMM_MMIOX_MLSU
 (
   clk,
@@ -219,32 +222,53 @@ output wire mo_sstore_tensor_row_rready;
 output wire [BW_OUTPUT_TENSOR_ROW-1:0] mo_sstore_tensor_row_rdata;
 
 // ---------------- AXI (tied-off) ----------------
-output wire mq2vta_rxawready, mq2vta_rxwready, mq2vta_rxbvalid;
-output wire [(BW_AXI_TID)-1:0] mq2vta_rxbid, mq2vta_rxrid;
-output wire [1:0] mq2vta_rxbresp, mq2vta_rxrresp;
-output wire mq2vta_rxarready, mq2vta_rxrvalid, mq2vta_rxrlast;
-output wire [(BW_AXI_DATA)-1:0] mq2vta_rxrdata;
-input  wire mq2vta_rxawvalid, mq2vta_rxwvalid, mq2vta_rxbready;
-input  wire [(BW_ADDR)-1:0] mq2vta_rxawaddr, mq2vta_rxaraddr;
-input  wire [(BW_AXI_TID)-1:0] mq2vta_rxawid, mq2vta_rxwid, mq2vta_rxarid;
-input  wire [7:0]  mq2vta_rxawlen, mq2vta_rxarlen;
-input  wire [2:0]  mq2vta_rxawsize, mq2vta_rxarsize;
-input  wire [1:0]  mq2vta_rxawburst, mq2vta_rxarburst;
-input  wire [(BW_AXI_DATA)-1:0] mq2vta_rxwdata;
-input  wire [(BW_AXI_DATA/8)-1:0] mq2vta_rxwstrb;
-input  wire mq2vta_rxwlast, mq2vta_rxarvalid, mq2vta_rxrready;
+// AW Channel
+input  wire [BW_AXI_TID-1:0]   mq2vta_rxawid;
+input  wire [BW_ADDR-1:0]      mq2vta_rxawaddr;
+input  wire [`BW_AXI_ALEN-1:0] mq2vta_rxawlen;
+input  wire [`BW_AXI_ASIZE-1:0] mq2vta_rxawsize;
+input  wire [`BW_AXI_ABURST-1:0] mq2vta_rxawburst;
+input  wire                    mq2vta_rxawvalid;
+output wire                    mq2vta_rxawready;
 
-assign mq2vta_rxawready = 1'b0;
-assign mq2vta_rxwready  = 1'b0;
-assign mq2vta_rxbvalid  = 1'b0;
-assign mq2vta_rxbid     = '0;
-assign mq2vta_rxbresp   = 2'b00;
-assign mq2vta_rxarready = 1'b0;
-assign mq2vta_rxrvalid  = 1'b0;
-assign mq2vta_rxrid     = '0;
-assign mq2vta_rxrdata   = '0;
-assign mq2vta_rxrlast   = 1'b0;
-assign mq2vta_rxrresp   = 2'b00;
+// W Channel
+input  wire [BW_AXI_TID-1:0]   mq2vta_rxwid;
+input  wire [BW_AXI_DATA-1:0]  mq2vta_rxwdata;
+input  wire [`BW_AXI_WSTRB(BW_AXI_DATA)-1:0] mq2vta_rxwstrb;
+input  wire                    mq2vta_rxwlast;
+input  wire                    mq2vta_rxwvalid;
+output wire                    mq2vta_rxwready;
+
+// B Channel
+output wire [BW_AXI_TID-1:0]   mq2vta_rxbid;
+output wire [`BW_AXI_BRESP-1:0] mq2vta_rxbresp;
+output wire                    mq2vta_rxbvalid;
+input  wire                    mq2vta_rxbready;
+
+// AR Channel
+input  wire [BW_AXI_TID-1:0]   mq2vta_rxarid;
+input  wire [BW_ADDR-1:0]      mq2vta_rxaraddr;
+input  wire [`BW_AXI_ALEN-1:0] mq2vta_rxarlen;
+input  wire [`BW_AXI_ASIZE-1:0] mq2vta_rxarsize;
+input  wire [`BW_AXI_ABURST-1:0] mq2vta_rxarburst;
+input  wire                    mq2vta_rxarvalid;
+output wire                    mq2vta_rxarready;
+
+// R Channel
+output wire [BW_AXI_TID-1:0]   mq2vta_rxrid;
+output wire [BW_AXI_DATA-1:0]  mq2vta_rxrdata;
+output wire [`BW_AXI_RRESP-1:0] mq2vta_rxrresp;
+output wire                    mq2vta_rxrlast;
+output wire                    mq2vta_rxrvalid;
+input  wire                    mq2vta_rxrready;
+
+wire [(2)-1:0] qdq2ram_renable_list;
+wire [(512)*(2)-1:0] qdq2ram_rdata_list;
+wire [(2)-1:0] qdq2ram_rvalid_list;
+wire [(8)*(2)-1:0] qdq2ram_index_list;
+wire [(2)-1:0] qdq2ram_wenable_list;
+wire [(64)*(2)-1:0] qdq2ram_byte_enable_list;
+wire [(512)*(2)-1:0] qdq2ram_wdata_list;
 
 // ---------------- Inst decode ----------------
 wire [`BW_DCA_MATRIX_INFO_ALIGNED-1:0] mx_info, mw_info, mo_info;
@@ -766,11 +790,55 @@ DCA_MATRIX_MREG2STORE #(
 reg [BW_TENSOR_SCALAR-1:0] mx_sload_tensor_row_wdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
 reg [BW_TENSOR_SCALAR-1:0] mx_sstore_tensor_row_rdata_reg[0:GET_MATRIX_NUM_COL(16)-1];
 integer __r;
+
+
 always @* begin
   for (__r = 0; __r < GET_MATRIX_NUM_COL(16); __r = __r + 1) begin
     mx_sload_tensor_row_wdata_reg[__r] = mx_sload_tensor_row_wdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
     mx_sstore_tensor_row_rdata_reg[__r]= mx_sstore_tensor_row_rdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
   end
 end
+
+axi_dual_port_sram128 i_axi_ram(
+  .clk(clk),
+  .rstnn(rstnn),
+  .rxawid(mq2vta_rxawid),
+  .rxawaddr(mq2vta_rxawaddr),
+  .rxawlen(mq2vta_rxawlen),
+  .rxawsize(mq2vta_rxawsize),
+  .rxawburst(mq2vta_rxawburst),
+  .rxawvalid(mq2vta_rxawvalid),
+  .rxawready(mq2vta_rxawready),
+  .rxwdata(mq2vta_rxwdata),
+  .rxwstrb(mq2vta_rxwstrb),
+  .rxwlast(mq2vta_rxwlast),
+  .rxwvalid(mq2vta_rxwvalid),
+  .rxwready(mq2vta_rxwready),
+  .rxbid(mq2vta_rxbid),
+  .rxbresp(mq2vta_rxbresp),
+  .rxbvalid(mq2vta_rxbvalid),
+  .rxbready(mq2vta_rxbready),
+  .rxarid(mq2vta_rxarid),
+  .rxaraddr(mq2vta_rxaraddr),
+  .rxarlen(mq2vta_rxarlen),
+  .rxarsize(mq2vta_rxarsize),
+  .rxarburst(mq2vta_rxarburst),
+  .rxarvalid(mq2vta_rxarvalid),
+  .rxarready(mq2vta_rxarready),
+  .rxrid(mq2vta_rxrid),
+  .rxrdata(mq2vta_rxrdata),
+  .rxrresp(mq2vta_rxrresp),
+  .rxrlast(mq2vta_rxrlast),
+  .rxrvalid(mq2vta_rxrvalid),
+  .rxrready(mq2vta_rxrready),
+
+  .int_renable_list(qdq2ram_renable_list),
+  .int_rdata_list(qdq2ram_rdata_list),
+  .int_rvalid_list(qdq2ram_rvalid_list),
+  .int_index_list(qdq2ram_index_list),
+  .int_wenable_list(qdq2ram_wenable_list),
+  .int_byte_enable_list(qdq2ram_byte_enable_list),
+  .int_wdata_list(qdq2ram_wdata_list)
+);
 
 endmodule
