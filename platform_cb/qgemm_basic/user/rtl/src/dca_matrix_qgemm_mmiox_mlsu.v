@@ -11,16 +11,18 @@
 
 `include "ervp_global.vh"
 `include "ervp_endian.vh"
-`include "dca_matrix_qgemm_defines.vh"  // 수정됨
+`include "dca_matrix_qgemm_defines.vh"
 `include "dca_matrix_info.vh"
 `include "dca_matrix_lsu_inst.vh"
 
-//---------------- Params ----------------
+`include "ervp_axi_define.vh"
+`include "munoc_network_include.vh"
+
 module DCA_MATRIX_QGEMM_MMIOX_MLSU
 (
   clk,
   rstnn,
-
+	
   control_rmx_core_config,
   control_rmx_core_status,
   control_rmx_clear_request,
@@ -84,8 +86,6 @@ module DCA_MATRIX_QGEMM_MMIOX_MLSU
   mo_sstore_tensor_row_rready,
   mo_sstore_tensor_row_rdata,
 
-  
-
 	mq2vta_rxawid,
 	mq2vta_rxawaddr,
 	mq2vta_rxawlen,
@@ -128,7 +128,7 @@ parameter FP_MANT_W        = 23;
 parameter FP_EXP_BIAS      = 127;
 parameter SCALE_FIFO_DEPTH = 4;
 parameter BW_AXI_DATA = 128;
-parameter BW_AXI_TID = 4;
+parameter BW_AXI_TID  = 4;
 
 parameter integer INPUT_MATRIX_SIZE  = 16;
 parameter integer WEIGHT_MATRIX_SIZE = 16;
@@ -136,10 +136,10 @@ parameter integer OUTPUT_MATRIX_SIZE = 16;
 parameter TENSOR_PARA = 0;
 
 localparam BW_CONFIG = 1;
-localparam BW_STATUS = `BW_DCA_MATRIX_QDQ_STATUS;  // not used
-localparam BW_LOG = `BW_DCA_MATRIX_QDQ_LOG;  // not used
-localparam BW_INST = `BW_DCA_MATRIX_QDQ_INST;
-localparam BW_INPUT = 32;
+localparam BW_STATUS = `BW_DCA_MATRIX_QDQ_STATUS;
+localparam BW_LOG    = `BW_DCA_MATRIX_QDQ_LOG;
+localparam BW_INST   = `BW_DCA_MATRIX_QDQ_INST;
+localparam BW_INPUT  = 32;
 localparam BW_OUTPUT = 32;
 
 // ----------------------------------------------------------------------------
@@ -147,9 +147,9 @@ localparam BW_OUTPUT = 32;
 `include "dca_tensor_scalar_lpara.vb"
 // ----------------------------------------------------------------------------
 
-localparam integer INPUT_MATRIX_NUM_COL   = GET_MATRIX_NUM_COL(INPUT_MATRIX_SIZE);
-localparam integer WEIGHT_MATRIX_NUM_COL  = GET_MATRIX_NUM_COL(WEIGHT_MATRIX_SIZE);
-localparam integer OUTPUT_MATRIX_NUM_COL  = GET_MATRIX_NUM_COL(OUTPUT_MATRIX_SIZE);
+localparam integer INPUT_MATRIX_NUM_COL  = GET_MATRIX_NUM_COL(INPUT_MATRIX_SIZE);
+localparam integer WEIGHT_MATRIX_NUM_COL = GET_MATRIX_NUM_COL(WEIGHT_MATRIX_SIZE);
+localparam integer OUTPUT_MATRIX_NUM_COL = GET_MATRIX_NUM_COL(OUTPUT_MATRIX_SIZE);
 
 localparam integer BW_INPUT_TENSOR_ROW   = BW_TENSOR_SCALAR*INPUT_MATRIX_NUM_COL;
 localparam integer BW_WEIGHT_TENSOR_ROW  = BW_TENSOR_SCALAR*WEIGHT_MATRIX_NUM_COL;
@@ -163,130 +163,133 @@ localparam MREG_RESET_VALUE = TENSOR_ZERO;
 input  wire clk;
 input  wire rstnn;
 
-// Control / MMIO
-input wire [(BW_CONFIG)-1:0] control_rmx_core_config;
+// ---------------- Control ties ----------------
+input  wire [(BW_CONFIG)-1:0] control_rmx_core_config;
 output wire [(BW_STATUS)-1:0] control_rmx_core_status;
-input wire control_rmx_clear_request;
+input  wire control_rmx_clear_request;
 output wire control_rmx_clear_finish;
-input wire control_rmx_log_fifo_wready;
+input  wire control_rmx_log_fifo_wready;
 output wire control_rmx_log_fifo_wrequest;
 output wire [(BW_LOG)-1:0] control_rmx_log_fifo_wdata;
-input wire control_rmx_inst_fifo_rready;
-input wire [(BW_INST)-1:0] control_rmx_inst_fifo_rdata;
+input  wire control_rmx_inst_fifo_rready;
+input  wire [(BW_INST)-1:0] control_rmx_inst_fifo_rdata;
 output wire control_rmx_inst_fifo_rrequest;
 output wire control_rmx_operation_finish;
-input wire control_rmx_input_fifo_rready;
-input wire [(BW_INPUT)-1:0] control_rmx_input_fifo_rdata;
+input  wire control_rmx_input_fifo_rready;
+input  wire [(BW_INPUT)-1:0] control_rmx_input_fifo_rdata;
 output wire control_rmx_input_fifo_rrequest;
-input wire control_rmx_output_fifo_wready;
+input  wire control_rmx_output_fifo_wready;
 output wire control_rmx_output_fifo_wrequest;
 output wire [(BW_OUTPUT)-1:0] control_rmx_output_fifo_wdata;
 
+assign control_rmx_core_status          = '0;
+assign control_rmx_clear_finish         = 1'b0;
+assign control_rmx_log_fifo_wrequest    = 1'b0;
+assign control_rmx_log_fifo_wdata       = '0;
+assign control_rmx_input_fifo_rrequest  = 1'b0;
+assign control_rmx_output_fifo_wrequest = 1'b0;
+assign control_rmx_output_fifo_wdata    = '0;
 
-// A LSU (FP in → QA out)
+// ---------------- LSU (ports omitted comments for brevity) ----------------
 output wire mx_sinst_wvalid;
 output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mx_sinst_wdata;
-input wire mx_sinst_wready;
-input wire mx_sinst_decode_finish;
-input wire mx_sinst_execute_finish;
-input wire mx_sinst_busy;
-input wire mx_sload_tensor_row_wvalid;
-input wire mx_sload_tensor_row_wlast;
-input wire [BW_INPUT_TENSOR_ROW-1:0] mx_sload_tensor_row_wdata;
+input  wire mx_sinst_wready, mx_sinst_decode_finish, mx_sinst_execute_finish, mx_sinst_busy;
+input  wire mx_sload_tensor_row_wvalid, mx_sload_tensor_row_wlast;
+input  wire [BW_INPUT_TENSOR_ROW-1:0] mx_sload_tensor_row_wdata;
 output wire mx_sload_tensor_row_wready;
-input wire mx_sstore_tensor_row_rvalid;
-input wire mx_sstore_tensor_row_rlast;
+input  wire mx_sstore_tensor_row_rvalid, mx_sstore_tensor_row_rlast;
 output wire mx_sstore_tensor_row_rready;
 output wire [BW_INPUT_TENSOR_ROW-1:0] mx_sstore_tensor_row_rdata;
 
 output wire mw_sinst_wvalid;
 output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mw_sinst_wdata;
-input wire mw_sinst_wready;
-input wire mw_sinst_decode_finish;
-input wire mw_sinst_execute_finish;
-input wire mw_sinst_busy;
-input wire mw_sload_tensor_row_wvalid;
-input wire mw_sload_tensor_row_wlast;
-input wire [BW_WEIGHT_TENSOR_ROW-1:0] mw_sload_tensor_row_wdata;
+input  wire mw_sinst_wready, mw_sinst_decode_finish, mw_sinst_execute_finish, mw_sinst_busy;
+input  wire mw_sload_tensor_row_wvalid, mw_sload_tensor_row_wlast;
+input  wire [BW_WEIGHT_TENSOR_ROW-1:0] mw_sload_tensor_row_wdata;
 output wire mw_sload_tensor_row_wready;
-input wire mw_sstore_tensor_row_rvalid;
-input wire mw_sstore_tensor_row_rlast;
+input  wire mw_sstore_tensor_row_rvalid, mw_sstore_tensor_row_rlast;
 output wire mw_sstore_tensor_row_rready;
 output wire [BW_WEIGHT_TENSOR_ROW-1:0] mw_sstore_tensor_row_rdata;
 
 output wire mo_sinst_wvalid;
 output wire [(`BW_DCA_MATRIX_LSU_INST)-1:0] mo_sinst_wdata;
-input wire mo_sinst_wready;
-input wire mo_sinst_decode_finish;
-input wire mo_sinst_execute_finish;
-input wire mo_sinst_busy;
-input wire mo_sload_tensor_row_wvalid;
-input wire mo_sload_tensor_row_wlast;
-input wire [BW_OUTPUT_TENSOR_ROW-1:0] mo_sload_tensor_row_wdata;
+input  wire mo_sinst_wready, mo_sinst_decode_finish, mo_sinst_execute_finish, mo_sinst_busy;
+input  wire mo_sload_tensor_row_wvalid, mo_sload_tensor_row_wlast;
+input  wire [BW_OUTPUT_TENSOR_ROW-1:0] mo_sload_tensor_row_wdata;
 output wire mo_sload_tensor_row_wready;
-input wire mo_sstore_tensor_row_rvalid;
-input wire mo_sstore_tensor_row_rlast;
+input  wire mo_sstore_tensor_row_rvalid, mo_sstore_tensor_row_rlast;
 output wire mo_sstore_tensor_row_rready;
 output wire [BW_OUTPUT_TENSOR_ROW-1:0] mo_sstore_tensor_row_rdata;
 
-output wire mq2vta_rxawready;
-input wire mq2vta_rxawvalid;
-input wire [(BW_ADDR)-1:0] mq2vta_rxawaddr;
-input wire [(BW_AXI_TID)-1:0] mq2vta_rxawid;
-input wire [(8)-1:0] mq2vta_rxawlen;
-input wire [(3)-1:0] mq2vta_rxawsize;
-input wire [(2)-1:0] mq2vta_rxawburst;
-output wire mq2vta_rxwready;
-input wire mq2vta_rxwvalid;
-input wire [(BW_AXI_TID)-1:0] mq2vta_rxwid;
-input wire [(BW_AXI_DATA)-1:0] mq2vta_rxwdata;
-input wire [(BW_AXI_DATA/8)-1:0] mq2vta_rxwstrb;
-input wire mq2vta_rxwlast;
-input wire mq2vta_rxbready;
-output wire mq2vta_rxbvalid;
-output wire [(BW_AXI_TID)-1:0] mq2vta_rxbid;
-output wire [(2)-1:0] mq2vta_rxbresp;
-output wire mq2vta_rxarready;
-input wire mq2vta_rxarvalid;
-input wire [(BW_ADDR)-1:0] mq2vta_rxaraddr;
-input wire [(BW_AXI_TID)-1:0] mq2vta_rxarid;
-input wire [(8)-1:0] mq2vta_rxarlen;
-input wire [(3)-1:0] mq2vta_rxarsize;
-input wire [(2)-1:0] mq2vta_rxarburst;
-input wire mq2vta_rxrready;
-output wire mq2vta_rxrvalid;
-output wire [(BW_AXI_TID)-1:0] mq2vta_rxrid;
-output wire [(BW_AXI_DATA)-1:0] mq2vta_rxrdata;
-output wire mq2vta_rxrlast;
-output wire [(2)-1:0] mq2vta_rxrresp;
+// ---------------- AXI (tied-off) ----------------
+// AW Channel
+input  wire [BW_AXI_TID-1:0]   mq2vta_rxawid;
+input  wire [BW_ADDR-1:0]      mq2vta_rxawaddr;
+input  wire [`BW_AXI_ALEN-1:0] mq2vta_rxawlen;
+input  wire [`BW_AXI_ASIZE-1:0] mq2vta_rxawsize;
+input  wire [`BW_AXI_ABURST-1:0] mq2vta_rxawburst;
+input  wire                    mq2vta_rxawvalid;
+output wire                    mq2vta_rxawready;
 
-// ---------------- Control ties ----------------
-// not used
-assign control_rmx_core_status = 0;
-assign control_rmx_clear_finish = 0;
-assign control_rmx_log_fifo_wrequest = 0;
-assign control_rmx_log_fifo_wdata = 0;
-assign control_rmx_input_fifo_rrequest = 0;
-assign control_rmx_output_fifo_wrequest = 0;
-assign control_rmx_output_fifo_wdata = 0;
+// W Channel
+input  wire [BW_AXI_TID-1:0]   mq2vta_rxwid;
+input  wire [BW_AXI_DATA-1:0]  mq2vta_rxwdata;
+input  wire [`BW_AXI_WSTRB(BW_AXI_DATA)-1:0] mq2vta_rxwstrb;
+input  wire                    mq2vta_rxwlast;
+input  wire                    mq2vta_rxwvalid;
+output wire                    mq2vta_rxwready;
+
+// B Channel
+output wire [BW_AXI_TID-1:0]   mq2vta_rxbid;
+output wire [`BW_AXI_BRESP-1:0] mq2vta_rxbresp;
+output wire                    mq2vta_rxbvalid;
+input  wire                    mq2vta_rxbready;
+
+// AR Channel
+input  wire [BW_AXI_TID-1:0]   mq2vta_rxarid;
+input  wire [BW_ADDR-1:0]      mq2vta_rxaraddr;
+input  wire [`BW_AXI_ALEN-1:0] mq2vta_rxarlen;
+input  wire [`BW_AXI_ASIZE-1:0] mq2vta_rxarsize;
+input  wire [`BW_AXI_ABURST-1:0] mq2vta_rxarburst;
+input  wire                    mq2vta_rxarvalid;
+output wire                    mq2vta_rxarready;
+
+// R Channel
+output wire [BW_AXI_TID-1:0]   mq2vta_rxrid;
+output wire [BW_AXI_DATA-1:0]  mq2vta_rxrdata;
+output wire [`BW_AXI_RRESP-1:0] mq2vta_rxrresp;
+output wire                    mq2vta_rxrlast;
+output wire                    mq2vta_rxrvalid;
+input  wire                    mq2vta_rxrready;
+
+wire [(2)-1:0] qdq2ram_renable_list;
+wire [(512)*(2)-1:0] qdq2ram_rdata_list;
+wire [(2)-1:0] qdq2ram_rvalid_list;
+wire [(8)*(2)-1:0] qdq2ram_index_list;
+wire [(2)-1:0] qdq2ram_wenable_list;
+wire [(64)*(2)-1:0] qdq2ram_byte_enable_list;
+wire [(512)*(2)-1:0] qdq2ram_wdata_list;
 
 // ---------------- Inst decode ----------------
 wire [`BW_DCA_MATRIX_INFO_ALIGNED-1:0] mx_info, mw_info, mo_info;
-assign {mo_info,mw_info,mx_info} = control_rmx_inst_fifo_rdata;
+wire mx_trans, mw_trans;
+wire q_start, dq_start;
+
+assign {mo_info, mw_info, mx_info, mx_trans, mw_trans, q_start, dq_start}
+       = control_rmx_inst_fifo_rdata;
 
 // ---------------- Dual FSM ----------------
 localparam [1:0] S_IDLE=2'd0, S_LOAD=2'd1, S_EXEC=2'd2, S_STORE=2'd3;
 reg [1:0] q_state, dq_state;
-
 wire q_go_load,  q_go_exec,  q_go_store,  q_go_idle;
 wire dq_go_load, dq_go_exec, dq_go_store, dq_go_idle;
 
 always @(posedge clk or negedge rstnn) begin
   if(!rstnn) q_state <= S_IDLE;
   else case(q_state)
-    S_IDLE:  if(q_go_load)  q_state <= S_LOAD;
-    S_LOAD:  if(q_go_exec)  q_state <= S_EXEC;
-    S_EXEC:  if(q_go_store) q_state <= S_STORE;
+    S_IDLE : if(q_go_load)  q_state <= S_LOAD;
+    S_LOAD : if(q_go_exec)  q_state <= S_EXEC;
+    S_EXEC : if(q_go_store) q_state <= S_STORE;
     S_STORE: if(q_go_idle)  q_state <= S_IDLE;
   endcase
 end
@@ -294,14 +297,14 @@ end
 always @(posedge clk or negedge rstnn) begin
   if(!rstnn) dq_state <= S_IDLE;
   else case(dq_state)
-    S_IDLE:  if(dq_go_load) dq_state <= S_LOAD;
-    S_LOAD:  if(dq_go_exec) dq_state <= S_EXEC;
-    S_EXEC:  if(dq_go_store) dq_state <= S_STORE;
+    S_IDLE : if(dq_go_load) dq_state <= S_LOAD;
+    S_LOAD : if(dq_go_exec) dq_state <= S_EXEC;
+    S_EXEC : if(dq_go_store) dq_state <= S_STORE;
     S_STORE: if(dq_go_idle) dq_state <= S_IDLE;
   endcase
 end
 
-// inst write & op-finish
+// inst write & 완료
 assign mx_sinst_wvalid = (q_state==S_IDLE)  & control_rmx_inst_fifo_rready & mx_sinst_wready & mw_sinst_wready;
 assign mw_sinst_wvalid = mx_sinst_wvalid;
 assign mo_sinst_wvalid = (dq_state==S_IDLE) & control_rmx_inst_fifo_rready & mo_sinst_wready;
@@ -310,27 +313,42 @@ assign mx_sinst_wdata  = {mx_info, OPC_READ};
 assign mw_sinst_wdata  = {mw_info, OPC_READ};
 assign mo_sinst_wdata  = {mo_info, OPC_WRITE};
 
-assign control_rmx_inst_fifo_rrequest = ((q_state==S_STORE) & q_go_idle) | ((dq_state==S_STORE) & dq_go_idle);
+wire q_inst_fire  = mx_sinst_wvalid; // same-cycle fire
+wire dq_inst_fire = mo_sinst_wvalid;
+
+assign control_rmx_inst_fifo_rrequest = ((q_state==S_STORE) & q_go_idle) |
+                                        ((dq_state==S_STORE) & dq_go_idle);
 assign control_rmx_operation_finish   = (q_state==S_IDLE) & (dq_state==S_IDLE);
 
+// ---------------- transpose latch ----------------
+reg ma_trans_latched, mb_trans_latched;
+always @(posedge clk or negedge rstnn) begin
+  if (!rstnn) begin
+    ma_trans_latched <= 1'b0;
+    mb_trans_latched <= 1'b0;
+  end else begin
+    if (q_inst_fire) begin
+      ma_trans_latched <= mx_trans;
+      mb_trans_latched <= mw_trans;
+    end
+    if (q_go_idle) begin
+      ma_trans_latched <= 1'b0;
+      mb_trans_latched <= 1'b0;
+    end
+  end
+end
+
 // ---------------- LOAD2MREG → MREG(TYPE3) → qdq ----------------
-// sent 카운터 기반 valid/ready → fire로만 진행
-
-// A, B path는 LOAD2MREG에서 MREG로 수정 완료
-// O path는 AXI READ LSU에서 받도록 수정 필요
-
-// qdq handshakes
 wire a_s_ready_o, b_s_ready_o, dq_s_ready_o;
 
-// A stream (X) : MMIO → LOAD2MREG → MREG → qdq로 수정됨
+// ===== A stream =====
 localparam int A_ROWS = INPUT_MATRIX_NUM_COL;
 reg  [$clog2(A_ROWS+1)-1:0] a_sent;
 wire a_valid = (q_state==S_EXEC) & (a_sent < A_ROWS);
 wire a_fire;
 
-// LOAD2MREG(A)
-wire                       a_load_wready, a_load_rready, a_load_busy;
-wire                       a_src_mreg_wen, a_src_mreg_ren;
+wire a_load_wready, a_load_rready, a_load_busy;
+wire a_src_mreg_wen, a_src_mreg_ren;
 wire [BW_INPUT_TENSOR_ROW-1:0] a_src_mreg_wdata, a_src_mreg_rdata;
 
 assign mx_sload_tensor_row_wready = a_load_wready;
@@ -349,7 +367,7 @@ DCA_MATRIX_LOAD2MREG #(
   .mreg_move_wdata_list1d (a_src_mreg_wdata),
 
   .loadreg_rready         (a_load_rready),
-  .loadreg_rrequest       (1'b1) // load 완료 즉시 ack
+  .loadreg_rrequest       (1'b1)
 );
 
 DCA_MATRIX_REGISTER_TYPE3 #(
@@ -363,12 +381,11 @@ DCA_MATRIX_REGISTER_TYPE3 #(
   .move_wdata_list(a_src_mreg_wdata),
   .move_renable (a_src_mreg_ren),
   .move_rdata_list(a_src_mreg_rdata),
-  .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
+  .shift_up(1'b0), .shift_left(1'b0), .transpose(ma_trans_latched),
   .all_rdata_list2d(), .upmost_rdata_list1d()
 );
 
-// qdq 입력 (A)
-assign a_fire      = a_valid & a_s_ready_o;   // 한 행 소비
+assign a_fire         = a_valid & a_s_ready_o;
 assign a_src_mreg_ren = a_fire;
 
 wire a_s_valid_i = a_valid;
@@ -376,20 +393,18 @@ wire [BW_INPUT_TENSOR_ROW-1:0] a_s_data_i = a_src_mreg_rdata;
 
 always @(posedge clk or negedge rstnn) begin
   if(!rstnn)          a_sent <= '0;
-  else if (q_go_exec) a_sent <= '0;          // 시작 펄스에서만 초기화
+  else if (q_go_exec) a_sent <= '0;
   else if (a_fire)    a_sent <= a_sent + 1'b1;
 end
 
-
-// B stream (W) : MMIO → LOAD2MREG → MREG → qdq로 수정됨
+// ===== B stream =====
 localparam int B_ROWS = WEIGHT_MATRIX_NUM_COL;
 reg  [$clog2(B_ROWS+1)-1:0] b_sent;
 wire b_valid = (q_state==S_EXEC) & (b_sent < B_ROWS);
 wire b_fire;
 
-// LOAD2MREG(B)
-wire                       b_load_wready, b_load_rready, b_load_busy;
-wire                       b_src_mreg_wen, b_src_mreg_ren;
+wire b_load_wready, b_load_rready, b_load_busy;
+wire b_src_mreg_wen, b_src_mreg_ren;
 wire [BW_WEIGHT_TENSOR_ROW-1:0] b_src_mreg_wdata, b_src_mreg_rdata;
 
 assign mw_sload_tensor_row_wready = b_load_wready;
@@ -422,12 +437,11 @@ DCA_MATRIX_REGISTER_TYPE3 #(
   .move_wdata_list(b_src_mreg_wdata),
   .move_renable (b_src_mreg_ren),
   .move_rdata_list(b_src_mreg_rdata),
-  .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
+  .shift_up(1'b0), .shift_left(1'b0), .transpose(mb_trans_latched),
   .all_rdata_list2d(), .upmost_rdata_list1d()
 );
 
-// qdq 입력 (B)
-assign b_fire      = b_valid & b_s_ready_o;
+assign b_fire         = b_valid & b_s_ready_o;
 assign b_src_mreg_ren = b_fire;
 
 wire b_s_valid_i = b_valid;
@@ -439,84 +453,138 @@ always @(posedge clk or negedge rstnn) begin
   else if (b_fire)    b_sent <= b_sent + 1'b1;
 end
 
+// ===== ACC stream (O_src → dq) =====
+// localparam int OUT_ROWS = OUTPUT_MATRIX_NUM_COL;
+// reg  [$clog2(OUT_ROWS+1)-1:0] acc_sent;
+// wire acc_valid = (dq_state==S_EXEC) & (acc_sent < OUT_ROWS);
+// wire acc_fire;
 
-// ACC stream (O_src) : (AXI →) LOAD2MREG → MREG → qdq
-localparam int OUT_ROWS = OUTPUT_MATRIX_NUM_COL;
-reg  [$clog2(OUT_ROWS+1)-1:0] acc_sent;
-wire acc_valid = (dq_state==S_EXEC) & (acc_sent < OUT_ROWS);
-wire acc_fire;
+// wire qo_load_wready, qo_load_rready, qo_load_busy;
+// wire qo_src_mreg_wen, qo_src_mreg_ren;
+// wire [BW_OUTPUT_TENSOR_ROW-1:0] qo_src_mreg_wdata, qo_src_mreg_rdata;
 
-// "AXI READ LSU → LOAD2MREG" 인지, "AXI READ LSU → MREG" 인지 모르겠어요..
-// AXI READ LSU에서 분해된 32xN 스트림을 여기에 연결
-wire                       qo_load_wready, qo_load_rready, qo_load_busy;
-wire                       qo_src_mreg_wen, qo_src_mreg_ren;
-wire [BW_OUTPUT_TENSOR_ROW-1:0] qo_src_mreg_wdata, qo_src_mreg_rdata;
+// assign mo_sload_tensor_row_wready = qo_load_wready;
 
-wire qo_axi_wvalid, qo_axi_wlast;
-wire [BW_OUTPUT_TENSOR_ROW-1:0] qo_axi_wdata;
+// DCA_MATRIX_LOAD2MREG #(
+//   .MATRIX_SIZE_PARA(OUTPUT_MATRIX_SIZE), .TENSOR_PARA(0)
+// ) i_load2mreg_QO (
+//   .clk(clk), .rstnn(rstnn),
+//   .clear(1'b0), .enable(1'b1), .busy(qo_load_busy),
+//   .load_tensor_row_wvalid (mo_sload_tensor_row_wvalid),
+//   .load_tensor_row_wlast  (mo_sload_tensor_row_wlast),
+//   .load_tensor_row_wdata  (mo_sload_tensor_row_wdata),
+//   .load_tensor_row_wready (qo_load_wready),
 
-// qdq 쪽 back-pressure로부터 ready 제공
-assign mo_sload_tensor_row_wready = qo_load_wready;
+//   .mreg_move_wenable      (qo_src_mreg_wen),
+//   .mreg_move_wdata_list1d (qo_src_mreg_wdata),
 
-DCA_MATRIX_LOAD2MREG #(
-  .MATRIX_SIZE_PARA(OUTPUT_MATRIX_SIZE), .TENSOR_PARA(0)
-) i_load2mreg_QO (
-  .clk(clk), .rstnn(rstnn),
-  .clear(1'b0), .enable(1'b1), .busy(qo_load_busy),
-  .load_tensor_row_wvalid (qo_axi_wvalid),
-  .load_tensor_row_wlast  (qo_axi_wlast),
-  .load_tensor_row_wdata  (qo_axi_wdata),
-  .load_tensor_row_wready (qo_load_wready),
+//   .loadreg_rready         (qo_load_rready),
+//   .loadreg_rrequest       (1'b1)
+// );
 
-  .mreg_move_wenable      (qo_src_mreg_wen),
-  .mreg_move_wdata_list1d (qo_src_mreg_wdata),
+// DCA_MATRIX_REGISTER_TYPE3 #(
+//   .MATRIX_SIZE_PARA(OUTPUT_MATRIX_SIZE),
+//   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
+//   .BW_MOVE_DATA(BW_OUTPUT_TENSOR_ROW),
+//   .RESET_VALUE(MREG_RESET_VALUE)
+// ) i_mregQO (
+//   .clk(clk), .rstnn(rstnn),
+//   .move_wenable (qo_src_mreg_wen),
+//   .move_wdata_list(qo_src_mreg_wdata),
+//   .move_renable (qo_src_mreg_ren),
+//   .move_rdata_list(qo_src_mreg_rdata),
+//   .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
+//   .all_rdata_list2d(), .upmost_rdata_list1d()
+// );
 
-  .loadreg_rready         (qo_load_rready),
-  .loadreg_rrequest       (1'b1)
-);
+// assign acc_fire        = acc_valid & dq_s_ready_o;
+// assign qo_src_mreg_ren = acc_fire;
 
-DCA_MATRIX_REGISTER_TYPE3 #(
-  .MATRIX_SIZE_PARA(OUTPUT_MATRIX_SIZE),
-  .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
-  .BW_MOVE_DATA(BW_OUTPUT_TENSOR_ROW),
-  .RESET_VALUE(MREG_RESET_VALUE)
-) i_mregQO (
-  .clk(clk), .rstnn(rstnn),
-  .move_wenable (qo_src_mreg_wen),
-  .move_wdata_list(qo_src_mreg_wdata),
-  .move_renable (qo_src_mreg_ren),
-  .move_rdata_list(qo_src_mreg_rdata),
-  .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
-  .all_rdata_list2d(), .upmost_rdata_list1d()
-);
+// wire                        dq_s_valid_i = acc_valid;
+// wire [BW_OUTPUT_TENSOR_ROW-1:0] dq_s_data_i  = qo_src_mreg_rdata;
 
-// qdq 입력 (dequant 입력원)
-assign acc_fire      = acc_valid & dq_s_ready_o;
-assign qo_src_mreg_ren = acc_fire;
+// always @(posedge clk or negedge rstnn) begin
+//   if(!rstnn)           acc_sent <= '0;
+//   else if (dq_go_exec) acc_sent <= '0;
+//   else if (acc_fire)   acc_sent <= acc_sent + 1'b1;
+// end
 
-wire dq_s_valid_i = acc_valid;
-wire [BW_OUTPUT_TENSOR_ROW-1:0] dq_s_data_i = qo_src_mreg_rdata;
-
-always @(posedge clk or negedge rstnn) begin
-  if(!rstnn)           acc_sent <= '0;
-  else if (dq_go_exec) acc_sent <= '0;
-  else if (acc_fire)   acc_sent <= acc_sent + 1'b1;
-end
+/* ACC stream (O matrix): AXI → BRAM → qdq controller (dequant)  // to be wired later */
 
 // ---------------- qdq controller ----------------
 wire a_m_valid_o, b_m_valid_o, dq_m_valid_o;
 wire a_m_ready_i, b_m_ready_i, dq_m_ready_i;
-wire [BW_INPUT_TENSOR_ROW-1:0]  a_m_data_o;
-wire [BW_WEIGHT_TENSOR_ROW-1:0] b_m_data_o;
-wire [BW_OUTPUT_TENSOR_ROW-1:0] dq_m_data_o;
+wire [BW_INPUT_TENSOR_ROW-1:0]   a_m_data_o;
+wire [BW_WEIGHT_TENSOR_ROW-1:0]  b_m_data_o;
+wire [BW_OUTPUT_TENSOR_ROW-1:0]  dq_m_data_o;
+wire [3:0]                       dq_m_index_o;
+
+// === 외부 start 레벨을 EXEC 진입 타이밍에 1clk 펄스로 만들어 투입 ===
+// inst fire 시 홀드 래치
+reg q_start_hold, dq_start_hold;
+always @(posedge clk or negedge rstnn) begin
+  if(!rstnn) begin
+    q_start_hold  <= 1'b0;
+    dq_start_hold <= 1'b0;
+  end else begin
+    if (q_inst_fire)  q_start_hold  <= q_start;
+    if (dq_inst_fire) dq_start_hold <= dq_start;
+    // 펄스 소비 후 클리어는 아래 펄스 생성 로직에서 처리
+  end
+end
+
+// LOAD 진행 감시: busy가 한 번 1이 됐다가 0이 되는 순간을 LOAD 완료로 정의
+reg a_busy_seen, b_busy_seen, qo_busy_seen;
+always @(posedge clk or negedge rstnn) begin
+  if(!rstnn) begin
+    a_busy_seen <= 1'b0; b_busy_seen <= 1'b0; qo_busy_seen <= 1'b0;
+  end else begin
+    if (q_state==S_LOAD) begin
+      if (a_load_busy) a_busy_seen <= 1'b1;
+      if (b_load_busy) b_busy_seen <= 1'b1;
+    end else if (q_state==S_IDLE) begin
+      a_busy_seen <= 1'b0; b_busy_seen <= 1'b0;
+    end
+    if (dq_state==S_LOAD) begin
+      if (qo_load_busy) qo_busy_seen <= 1'b1;
+    end else if (dq_state==S_IDLE) begin
+      qo_busy_seen <= 1'b0;
+    end
+  end
+end
+
+wire a_load_done  = a_busy_seen  & ~a_load_busy;
+wire b_load_done  = b_busy_seen  & ~b_load_busy;
+wire qo_load_done = qo_busy_seen & ~qo_load_busy;
+
+// EXEC 진입 사이클 검출 (다음 사이클로 상태가 바뀌므로, 현재 LOAD에서 done이면 곧 EXEC)
+wire q_exec_enter  = (q_state==S_LOAD)  & a_load_done & b_load_done;
+wire dq_exec_enter = (dq_state==S_LOAD) & qo_load_done;
+
+// 1clk 펄스 생성(enter 사이클에만) + 홀드 클리어
+reg q_start_pulse, dq_start_pulse;
+always @(posedge clk or negedge rstnn) begin
+  if(!rstnn) begin
+    q_start_pulse  <= 1'b0;
+    dq_start_pulse <= 1'b0;
+  end else begin
+    q_start_pulse  <= q_exec_enter  & q_start_hold;
+    dq_start_pulse <= dq_exec_enter & dq_start_hold;
+    if (q_exec_enter)  q_start_hold  <= 1'b0;
+    if (dq_exec_enter) dq_start_hold <= 1'b0;
+  end
+end
 
 qdq_controller #(
   .BIT_NUM(BIT_NUM), .MAT_SIZE(OUTPUT_MATRIX_SIZE),
   .FP_DATA_W(BW_TENSOR_SCALAR), .FP_EXP_W(FP_EXP_W),
   .FP_MANT_W(FP_MANT_W), .FP_EXP_BIAS(FP_EXP_BIAS),
-  .LANES_NUM(OUTPUT_MATRIX_NUM_COL), .SCALE_FIFO_DEPTH(SCALE_FIFO_DEPTH)
+  .LANES_NUM(OUTPUT_MATRIX_NUM_COL), .SCALE_FIFO_DEPTH(SCALE_FIFO_DEPTH), .ROW_W_DQ(4)
 ) i_qdq (
   .clk(clk), .rstnn(rstnn),
+
+  .q_start_i   ( q_start_pulse ),
+  .dq_start_i  ( dq_start_pulse ),
 
   // A quant
   .a_s_valid_i ( a_s_valid_i ),
@@ -540,10 +608,10 @@ qdq_controller #(
   .dq_s_data_i  ( dq_s_data_i ),
   .dq_m_valid_o ( dq_m_valid_o ),
   .dq_m_ready_i ( dq_m_ready_i ),
-  .dq_m_data_o  ( dq_m_data_o )
+  .dq_m_data_o  ( dq_m_data_o ),
+  .dq_m_index_o ( dq_m_index_o )
 );
 
-// qdq out → QA/QB/OUT MREG write
 wire a_out_fire  = a_m_valid_o  & a_m_ready_i;
 wire b_out_fire  = b_m_valid_o  & b_m_ready_i;
 wire dq_out_fire = dq_m_valid_o & dq_m_ready_i;
@@ -552,7 +620,7 @@ assign a_m_ready_i  = 1'b1;
 assign b_m_ready_i  = 1'b1;
 assign dq_m_ready_i = 1'b1;
 
-// fill counters (for STORE enter)
+// ---------------- STORE 진입 위한 fill 카운터 ----------------
 reg [$clog2(A_ROWS+1)-1:0]   qa_wcnt;
 reg [$clog2(B_ROWS+1)-1:0]   qb_wcnt;
 reg [$clog2(OUT_ROWS+1)-1:0] out_wcnt;
@@ -562,42 +630,42 @@ wire qb_full  = (qb_wcnt  == B_ROWS);
 wire out_full = (out_wcnt == OUT_ROWS);
 
 always @(posedge clk or negedge rstnn) begin
-  if(!rstnn)             qa_wcnt <= '0;
-  else if (q_go_exec)    qa_wcnt <= '0;
+  if(!rstnn)           qa_wcnt <= '0;
+  else if (q_go_exec)  qa_wcnt <= '0;
   else if (a_out_fire && !qa_full) qa_wcnt <= qa_wcnt + 1'b1;
 end
 always @(posedge clk or negedge rstnn) begin
-  if(!rstnn)             qb_wcnt <= '0;
-  else if (q_go_exec)    qb_wcnt <= '0;
+  if(!rstnn)           qb_wcnt <= '0;
+  else if (q_go_exec)  qb_wcnt <= '0;
   else if (b_out_fire && !qb_full) qb_wcnt <= qb_wcnt + 1'b1;
 end
 always @(posedge clk or negedge rstnn) begin
-  if(!rstnn)              out_wcnt <= '0;
-  else if (dq_go_exec)    out_wcnt <= '0;
+  if(!rstnn)            out_wcnt <= '0;
+  else if (dq_go_exec)  out_wcnt <= '0;
   else if (dq_out_fire && !out_full) out_wcnt <= out_wcnt + 1'b1;
 end
 
-// FSM go conditions
-reg  qa_store_req,    qb_store_req,    out_store_req;
-wire qa_store_busy, qb_store_busy, out_store_busy;
+// ---------------- FSM go conditions ----------------
+assign q_go_load  = q_inst_fire;
+assign dq_go_load = dq_inst_fire;
 
-assign q_go_load  = mx_sinst_wvalid;                 // same-cycle guard
-assign q_go_exec  = (q_state==S_LOAD);               // LOAD→EXEC 바로 진입
+assign q_go_exec  = (q_state==S_LOAD)  & a_load_done & b_load_done;
+assign dq_go_exec = (dq_state==S_LOAD) & qo_load_done;
+
+reg  qa_store_req, qb_store_req, out_store_req;
+wire qa_store_busy, qb_store_busy, out_store_busy;
+wire qa_store_wready, qb_store_wready, out_store_wready;
+
 assign q_go_store = (q_state==S_EXEC) & qa_full & qb_full;
 assign q_go_idle  = (q_state==S_STORE) &
                     (~qa_store_req) & (~qb_store_req) &
                     (~qa_store_busy) & (~qb_store_busy);
 
-assign dq_go_load  = mo_sinst_wvalid;
-assign dq_go_exec  = (dq_state==S_LOAD);
 assign dq_go_store = (dq_state==S_EXEC) & out_full;
 assign dq_go_idle  = (dq_state==S_STORE) &
                      (~out_store_req) & (~out_store_busy);
 
 // ---------------- QA/QB/OUT MREG + MREG2STORE ----------------
-
-// QA path, QB path이 AXI로 연결되도록 수정 필요.
-
 wire                           qa_mreg2store_ren;
 wire [BW_INPUT_TENSOR_ROW-1:0] qa_mreg2store_rdata;
 wire                           qb_mreg2store_ren;
@@ -605,40 +673,38 @@ wire [BW_WEIGHT_TENSOR_ROW-1:0] qb_mreg2store_rdata;
 wire                           out_mreg2store_ren;
 wire [BW_OUTPUT_TENSOR_ROW-1:0] out_mreg2store_rdata;
 
+// QA, QB stream (qa,qb matrix): qdq controller → BRAM → AXI // to be wired later
 
-// QA buffer
-DCA_MATRIX_REGISTER_TYPE3 #(
-  .MATRIX_SIZE_PARA(INPUT_MATRIX_SIZE),
-  .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
-  .BW_MOVE_DATA(BW_INPUT_TENSOR_ROW),
-  .RESET_VALUE(MREG_RESET_VALUE)
-) i_mregQA (
-  .clk(clk), .rstnn(rstnn),
-  .move_wenable(a_out_fire),
-  .move_wdata_list(a_m_data_o),
-  .move_renable(qa_mreg2store_ren),
-  .move_rdata_list(qa_mreg2store_rdata),
-  .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
-  .all_rdata_list2d(), .upmost_rdata_list1d()
-);
+// DCA_MATRIX_REGISTER_TYPE3 #(
+//   .MATRIX_SIZE_PARA(INPUT_MATRIX_SIZE),
+//   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
+//   .BW_MOVE_DATA(BW_INPUT_TENSOR_ROW),
+//   .RESET_VALUE(MREG_RESET_VALUE)
+// ) i_mregQA (
+//   .clk(clk), .rstnn(rstnn),
+//   .move_wenable(a_out_fire),
+//   .move_wdata_list(a_m_data_o),
+//   .move_renable(qa_mreg2store_ren),
+//   .move_rdata_list(qa_mreg2store_rdata),
+//   .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
+//   .all_rdata_list2d(), .upmost_rdata_list1d()
+// );
 
-// QB buffer
-DCA_MATRIX_REGISTER_TYPE3 #(
-  .MATRIX_SIZE_PARA(WEIGHT_MATRIX_SIZE),
-  .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
-  .BW_MOVE_DATA(BW_WEIGHT_TENSOR_ROW),
-  .RESET_VALUE(MREG_RESET_VALUE)
-) i_mregQB (
-  .clk(clk), .rstnn(rstnn),
-  .move_wenable(b_out_fire),
-  .move_wdata_list(b_m_data_o),
-  .move_renable(qb_mreg2store_ren),
-  .move_rdata_list(qb_mreg2store_rdata),
-  .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
-  .all_rdata_list2d(), .upmost_rdata_list1d()
-);
+// DCA_MATRIX_REGISTER_TYPE3 #(
+//   .MATRIX_SIZE_PARA(WEIGHT_MATRIX_SIZE),
+//   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
+//   .BW_MOVE_DATA(BW_WEIGHT_TENSOR_ROW),
+//   .RESET_VALUE(MREG_RESET_VALUE)
+// ) i_mregQB (
+//   .clk(clk), .rstnn(rstnn),
+//   .move_wenable(b_out_fire),
+//   .move_wdata_list(b_m_data_o),
+//   .move_renable(qb_mreg2store_ren),
+//   .move_rdata_list(qb_mreg2store_rdata),
+//   .shift_up(1'b0), .shift_left(1'b0), .transpose(1'b0),
+//   .all_rdata_list2d(), .upmost_rdata_list1d()
+// );
 
-// OUT buffer
 DCA_MATRIX_REGISTER_TYPE3 #(
   .MATRIX_SIZE_PARA(OUTPUT_MATRIX_SIZE),
   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR),
@@ -654,36 +720,30 @@ DCA_MATRIX_REGISTER_TYPE3 #(
   .all_rdata_list2d(), .upmost_rdata_list1d()
 );
 
-// MREG2STORE
-wire qa_store_wready, qb_store_wready, out_store_wready;
+// always @(posedge clk or negedge rstnn) begin
+//   if (!rstnn)                            qa_store_req <= 1'b0;
+//   else if ((q_state==S_EXEC) && qa_full) qa_store_req <= 1'b1;
+//   else if (qa_store_wready)              qa_store_req <= 1'b0;
+// end
+
+// always @(posedge clk or negedge rstnn) begin
+//   if (!rstnn)                            qb_store_req <= 1'b0;
+//   else if ((q_state==S_EXEC) && qb_full) qb_store_req <= 1'b1;
+//   else if (qb_store_wready)              qb_store_req <= 1'b0;
+// end
 
 always @(posedge clk or negedge rstnn) begin
-  if (!rstnn)                          qa_store_req <= 1'b0;
-  else if ((q_state==S_EXEC) && qa_full) qa_store_req <= 1'b1;
-  else if (qa_store_wready)            qa_store_req <= 1'b0;
+  if (!rstnn)                               out_store_req <= 1'b0;
+  else if ((dq_state==S_EXEC) && out_full)  out_store_req <= 1'b1;
+  else if (out_store_wready)                out_store_req <= 1'b0;
 end
-
-always @(posedge clk or negedge rstnn) begin
-  if (!rstnn)                          qb_store_req <= 1'b0;
-  else if ((q_state==S_EXEC) && qb_full) qb_store_req <= 1'b1;
-  else if (qb_store_wready)            qb_store_req <= 1'b0;
-end
-
-// OUT 쪽도 동일 패턴 유지
-always @(posedge clk or negedge rstnn) begin
-  if (!rstnn)                             out_store_req <= 1'b0;
-  else if ((dq_state==S_EXEC) && out_full) out_store_req <= 1'b1;
-  else if (out_store_wready)              out_store_req <= 1'b0;
-end
-
-// QA, QB는 AXI 포트로 연결 필요
 
 // DCA_MATRIX_MREG2STORE #(
 //   .MATRIX_SIZE_PARA(INPUT_MATRIX_SIZE),
 //   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR)
 // ) i_mreg2store_QA (
 //   .clk(clk), .rstnn(rstnn),
-//   .clear(1'b0), .enable(1'b1), .busy(qa_store_busy),  
+//   .clear(1'b0), .enable(1'b1), .busy(qa_store_busy),
 //   .storereg_wready(qa_store_wready),
 //   .storereg_wrequest(qa_store_req),
 //   .mreg_move_renable(qa_mreg2store_ren),
@@ -699,7 +759,7 @@ end
 //   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR)
 // ) i_mreg2store_QB (
 //   .clk(clk), .rstnn(rstnn),
-//   .clear(1'b0), .enable(1'b1), .busy(qb_store_busy),  
+//   .clear(1'b0), .enable(1'b1), .busy(qb_store_busy),
 //   .storereg_wready(qb_store_wready),
 //   .storereg_wrequest(qb_store_req),
 //   .mreg_move_renable(qb_mreg2store_ren),
@@ -715,7 +775,7 @@ DCA_MATRIX_MREG2STORE #(
   .BW_TENSOR_SCALAR(BW_TENSOR_SCALAR)
 ) i_mreg2store_OUT (
   .clk(clk), .rstnn(rstnn),
-  .clear(1'b0), .enable(1'b1), .busy(out_store_busy),  
+  .clear(1'b0), .enable(1'b1), .busy(out_store_busy),
   .storereg_wready(out_store_wready),
   .storereg_wrequest(out_store_req),
   .mreg_move_renable(out_mreg2store_ren),
@@ -726,19 +786,59 @@ DCA_MATRIX_MREG2STORE #(
   .store_tensor_row_rdata (mo_sstore_tensor_row_rdata)
 );
 
-/////////////////////////////////////////////////////////////
-// 디버깅용 로직
-/////////////////////////////////////////////////////////////
-// 플랫 입력 버스 -> 2차원 reg (웨이브 보기용)
+// ---------------- 디버깅 가독용 전개 ----------------
 reg [BW_TENSOR_SCALAR-1:0] mx_sload_tensor_row_wdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
-reg [BW_TENSOR_SCALAR-1:0] mx_sstore_tensor_row_rdata_reg [0:GET_MATRIX_NUM_COL(16)-1];
+reg [BW_TENSOR_SCALAR-1:0] mx_sstore_tensor_row_rdata_reg[0:GET_MATRIX_NUM_COL(16)-1];
+integer __r;
 
-integer __r, __idx;
+
 always @* begin
-    for (__r = 0; __r < GET_MATRIX_NUM_COL(16); __r = __r + 1) begin
-        mx_sload_tensor_row_wdata_reg[__r] = mx_sload_tensor_row_wdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
-        mx_sstore_tensor_row_rdata_reg[__r] = mx_sstore_tensor_row_rdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
-    end
+  for (__r = 0; __r < GET_MATRIX_NUM_COL(16); __r = __r + 1) begin
+    mx_sload_tensor_row_wdata_reg[__r] = mx_sload_tensor_row_wdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
+    mx_sstore_tensor_row_rdata_reg[__r]= mx_sstore_tensor_row_rdata[(__r+1)*BW_TENSOR_SCALAR-1 -: BW_TENSOR_SCALAR];
+  end
 end
+
+axi_dual_port_sram128 i_axi_ram(
+  .clk(clk),
+  .rstnn(rstnn),
+  .rxawid(mq2vta_rxawid),
+  .rxawaddr(mq2vta_rxawaddr),
+  .rxawlen(mq2vta_rxawlen),
+  .rxawsize(mq2vta_rxawsize),
+  .rxawburst(mq2vta_rxawburst),
+  .rxawvalid(mq2vta_rxawvalid),
+  .rxawready(mq2vta_rxawready),
+  .rxwdata(mq2vta_rxwdata),
+  .rxwstrb(mq2vta_rxwstrb),
+  .rxwlast(mq2vta_rxwlast),
+  .rxwvalid(mq2vta_rxwvalid),
+  .rxwready(mq2vta_rxwready),
+  .rxbid(mq2vta_rxbid),
+  .rxbresp(mq2vta_rxbresp),
+  .rxbvalid(mq2vta_rxbvalid),
+  .rxbready(mq2vta_rxbready),
+  .rxarid(mq2vta_rxarid),
+  .rxaraddr(mq2vta_rxaraddr),
+  .rxarlen(mq2vta_rxarlen),
+  .rxarsize(mq2vta_rxarsize),
+  .rxarburst(mq2vta_rxarburst),
+  .rxarvalid(mq2vta_rxarvalid),
+  .rxarready(mq2vta_rxarready),
+  .rxrid(mq2vta_rxrid),
+  .rxrdata(mq2vta_rxrdata),
+  .rxrresp(mq2vta_rxrresp),
+  .rxrlast(mq2vta_rxrlast),
+  .rxrvalid(mq2vta_rxrvalid),
+  .rxrready(mq2vta_rxrready),
+
+  .int_renable_list(qdq2ram_renable_list),
+  .int_rdata_list(qdq2ram_rdata_list),
+  .int_rvalid_list(qdq2ram_rvalid_list),
+  .int_index_list(qdq2ram_index_list),
+  .int_wenable_list(qdq2ram_wenable_list),
+  .int_byte_enable_list(qdq2ram_byte_enable_list),
+  .int_wdata_list(qdq2ram_wdata_list)
+);
 
 endmodule

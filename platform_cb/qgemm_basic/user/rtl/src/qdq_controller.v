@@ -1,14 +1,5 @@
 `timescale 1ns/1ps
 
-// ============================================================================
-// QDQ Controller
-// - Submodules:
-//    * quantize_array
-//    * dequantize_array
-//    * scale_cross_product
-//    * scale_fifo
-// ============================================================================
-
 module qdq_controller #(
     parameter integer BIT_NUM          = 8,
     parameter integer MAT_SIZE         = 16,
@@ -17,10 +8,15 @@ module qdq_controller #(
     parameter integer FP_MANT_W        = 23,
     parameter integer FP_EXP_BIAS      = 127,
     parameter integer LANES_NUM        = 16,
-    parameter integer SCALE_FIFO_DEPTH = 4
+    parameter integer SCALE_FIFO_DEPTH = 4,
+    parameter integer ROW_W_DQ         = 4
 )(
     input  wire                           clk,
     input  wire                           rstnn,
+
+    // start
+    input  wire                           q_start_i,
+    input  wire                           dq_start_i,
 
     // A tile → quantize
     input  wire                           a_s_valid_i,
@@ -48,7 +44,8 @@ module qdq_controller #(
     // dequantized FP out
     output wire                           dq_m_valid_o,
     input  wire                           dq_m_ready_i,
-    output wire [LANES_NUM*FP_DATA_W-1:0] dq_m_data_o
+    output wire [LANES_NUM*FP_DATA_W-1:0] dq_m_data_o,
+    output wire [ROW_W_DQ-1:0]            dq_m_index_o
 );
     // --------------------------------------------
     // utils
@@ -76,6 +73,7 @@ module qdq_controller #(
     ) A_quantize_array_i (
         .clk              (clk),
         .rstnn            (rstnn),
+        .start_i          (q_start_i),
         .s_valid_i        (a_s_valid_i),
         .s_ready_o        (a_s_ready_o),
         .s_data_i         (a_s_data_i),
@@ -109,6 +107,7 @@ module qdq_controller #(
     ) B_quantize_array_i (
         .clk              (clk),
         .rstnn            (rstnn),
+        .start_i          (q_start_i),
         .s_valid_i        (b_s_valid_i),
         .s_ready_o        (b_s_ready_o),
         .s_data_i         (b_s_data_i),
@@ -215,34 +214,66 @@ module qdq_controller #(
     end
 
     // --------------------------------------------
-    // 4) Dequantize path — dequantize_array로 교체(스케일 먼저)
-    dequantize_array #(
-        .BIT_NUM     (BIT_NUM),
-        .MAT_SIZE    (MAT_SIZE),
-        .FP_DATA_W   (FP_DATA_W),
-        .FP_MANT_W   (FP_MANT_W),
-        .FP_EXP_W    (FP_EXP_W),
-        .FP_EXP_BIAS (FP_EXP_BIAS),
-        .LANES_NUM   (LANES_NUM)
-    ) dequantize_array_i (
-        .clk              (clk),
-        .rstnn            (rstnn),
+    // 4) Dequantize path
+    wire                          dqcore_acc_ready_w;
+    wire                          dqcore_out_valid_w;
+    wire [LANES_NUM*FP_DATA_W-1:0] dqcore_out_data_w;
 
-        // ACC stream in
-        .s_valid_i        (dq_s_valid_i),
-        .s_ready_o        (dq_s_ready_o),
-        .s_data_i         (dq_s_data_i),
+    wire [ROW_W_DQ-1:0]          dqcore_row_idx_w;
 
-        // SCALE tile from FIFO (한 타일 선수신)
-        .scl_valid_i      (fifo_rd_valid),
-        .scl_ready_o      (fifo_rd_ready),
-        .mantissa_scale_i (fifo_mant_dout),
-        .exp_scale_i      (fifo_exp_dout),
+    assign dq_s_ready_o = dqcore_acc_ready_w;
+    assign dq_m_valid_o = dqcore_out_valid_w;
+    assign dq_m_data_o  = dqcore_out_data_w;
+    assign dq_m_index_o = dqcore_row_idx_w;
+    wire dqcore_out_ready_w = dq_m_ready_i;
 
-        // dequantized out
-        .m_valid_o        (dq_m_valid_o),
-        .m_ready_i        (dq_m_ready_i),
-        .m_data_o         (dq_m_data_o)
+    dequantize_row_sync #(
+      .FP_DATA_W   (FP_DATA_W),
+      .FP_MANT_W   (FP_MANT_W),
+      .FP_EXP_W    (FP_EXP_W),
+      .FP_EXP_BIAS (FP_EXP_BIAS),
+      .BIT_NUM     (BIT_NUM),
+
+      .LANES_NUM   (LANES_NUM),      // MAT_SIZE == LANES_NUM 가정
+      .ROWS_MAX    (1<<ROW_W_DQ),    // 전역 행 인덱스 래핑 폭
+      .ROW_W       (ROW_W_DQ)
+    ) dequantize_row_sync_i (
+      .clk          (clk),
+      .rstn         (rstnn),
+      .clear        (1'b0),
+
+      // ACC 행 입력 스트림
+      .acc_row_valid (dq_s_valid_i),
+      .acc_row_ready (dqcore_acc_ready_w),
+      .acc_vec_i     (dq_s_data_i),
+
+      // 스케일 행렬 입력 (scale_fifo 의 show-ahead 출력)
+      .fifo_rd_valid  (fifo_rd_valid),
+      .fifo_rd_ready  (fifo_rd_ready),
+      .fifo_mant_dout (fifo_mant_dout),
+      .fifo_exp_dout  (fifo_exp_dout),
+
+      // 결과 스트림 (행 단위)
+      .out_valid (dqcore_out_valid_w),
+      .out_ready (dqcore_out_ready_w),
+      .r_vec_o   (dqcore_out_data_w),
+
+      // 전역 행 인덱스(옵션)
+      .row_idx_o (dqcore_row_idx_w)
     );
+
+    // --------------------------------------------
+    // (옵션) 디버깅 파형
+    // synthesis translate_off
+    reg [FP_DATA_W-1:0] dbg_acc_in [0:LANES_NUM-1];
+    reg [FP_DATA_W-1:0] dbg_fp_out [0:LANES_NUM-1];
+    integer __i;
+    always @* begin
+        for (__i=0; __i<LANES_NUM; __i=__i+1) begin
+            dbg_acc_in[__i] = dq_s_data_i[(__i+1)*FP_DATA_W-1 -: FP_DATA_W];
+            dbg_fp_out[__i] = dq_m_data_o[(__i+1)*FP_DATA_W-1 -: FP_DATA_W];
+        end
+    end
+    // synthesis translate_on
 
 endmodule
