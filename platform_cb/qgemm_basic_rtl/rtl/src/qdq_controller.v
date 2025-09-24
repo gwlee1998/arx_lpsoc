@@ -1,5 +1,14 @@
 `timescale 1ns/1ps
 
+// ============================================================================
+// QDQ Controller
+// - Submodules:
+//    * quantize_array
+//    * dequantize_array
+//    * scale_cross_product
+//    * scale_fifo
+// ============================================================================
+
 module qdq_controller #(
     parameter integer BIT_NUM          = 8,
     parameter integer MAT_SIZE         = 16,
@@ -214,18 +223,25 @@ module qdq_controller #(
     end
 
     // --------------------------------------------
-    // 4) Dequantize path
+    // 4) Dequantize path (+ dq_start 게이팅)
     wire                          dqcore_acc_ready_w;
     wire                          dqcore_out_valid_w;
     wire [LANES_NUM*FP_DATA_W-1:0] dqcore_out_data_w;
+    wire [3:0]                    dqcore_row_idx_w;
 
-    wire [ROW_W_DQ-1:0]          dqcore_row_idx_w;
+    reg dq_en;
+    always @(posedge clk or negedge rstnn) begin
+      if (!rstnn) dq_en <= 1'b0;
+      else if (dq_start_i) dq_en <= 1'b1;    // 필요 시 완료 지점에서 0으로 내릴 수 있음
+    end
 
-    assign dq_s_ready_o = dqcore_acc_ready_w;
+    // dequantize_row_sync
     assign dq_m_valid_o = dqcore_out_valid_w;
     assign dq_m_data_o  = dqcore_out_data_w;
     assign dq_m_index_o = dqcore_row_idx_w;
     wire dqcore_out_ready_w = dq_m_ready_i;
+
+    assign dq_s_ready_o = dq_en ? dqcore_acc_ready_w : 1'b0;
 
     dequantize_row_sync #(
       .FP_DATA_W   (FP_DATA_W),
@@ -261,19 +277,5 @@ module qdq_controller #(
       // 전역 행 인덱스(옵션)
       .row_idx_o (dqcore_row_idx_w)
     );
-
-    // --------------------------------------------
-    // (옵션) 디버깅 파형
-    // synthesis translate_off
-    reg [FP_DATA_W-1:0] dbg_acc_in [0:LANES_NUM-1];
-    reg [FP_DATA_W-1:0] dbg_fp_out [0:LANES_NUM-1];
-    integer __i;
-    always @* begin
-        for (__i=0; __i<LANES_NUM; __i=__i+1) begin
-            dbg_acc_in[__i] = dq_s_data_i[(__i+1)*FP_DATA_W-1 -: FP_DATA_W];
-            dbg_fp_out[__i] = dq_m_data_o[(__i+1)*FP_DATA_W-1 -: FP_DATA_W];
-        end
-    end
-    // synthesis translate_on
 
 endmodule
