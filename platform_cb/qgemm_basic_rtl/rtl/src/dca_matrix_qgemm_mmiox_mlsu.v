@@ -85,12 +85,12 @@ parameter integer WEIGHT_MATRIX_SIZE = 16;
 parameter integer OUTPUT_MATRIX_SIZE = 16;
 parameter TENSOR_PARA = 0;
 
-parameter int PORT_QAB = 0;
-parameter int PORT_ACC = 1;
+parameter integer PORT_QAB = 0;
+parameter integer PORT_ACC = 1;
 
-parameter int QA_BASE  = 0;
-parameter int QB_BASE  = 64;
-parameter int ACC_BASE = 0;
+parameter integer QA_BASE  = 0;
+parameter integer QB_BASE  = 64;
+parameter integer ACC_BASE = 0;
 
 localparam BW_CONFIG = 1;
 localparam BW_STATUS = `BW_DCA_MATRIX_QDQ_STATUS;
